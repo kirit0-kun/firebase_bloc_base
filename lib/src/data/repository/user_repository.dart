@@ -18,55 +18,40 @@ abstract class UserRepository<T extends FirebaseProfile>
     return auth.userChanges;
   }
 
-  Future<Either<Failure, Stream<T>>> signIn(
-      String email, String password) async {
-    try {
+  Future<Either<Failure, Stream<T>>> signIn(String email, String password) {
+    return tryFutureWork<Stream<T>>(() async {
       final user = await auth.signIn(email, password);
       if (user != null) {
         final userAccountStream = userDataSource
             .listenToUser(user.user.uid)
-            .map((event) => event?.copyWith(userDetails: user.user));
+            .map((event) => event?.copyWith(
+                userDetails: user.user,
+                isNewUser: user.additionalUserInfo.isNewUser));
         return Right(userAccountStream);
       }
       return Left(Failure('Failed to sign you in.'));
-    } catch (e, s) {
-      print(e);
-      print(s);
-      return handleError<Stream<T>>(e, (message) => Failure(message));
-    }
+    });
   }
 
   Future<Either<Failure, Stream<T>>> autoSignIn() async {
-    try {
+    return tryFutureWork<Stream<T>>(() async {
       final user = await auth.getUser();
       if (user != null) {
-        final userAccountStream = userDataSource
-            .listenToUser(user.uid)
-            .map((event) => event?.copyWith(userDetails: user));
+        final userAccountStream = userDataSource.listenToUser(user.uid).map(
+            (event) => event?.copyWith(userDetails: user, isNewUser: false));
         return Right(userAccountStream);
       }
       return Left(Failure('Failed to sign you in.'));
-    } catch (e, s) {
-      print(e);
-      print(s);
-      return handleError<Stream<T>>(e, (message) => Failure(message));
-    }
+    });
   }
 
-  Future<Failure> signOut() async {
-    try {
-      final user = await auth.signOut();
-      return null;
-    } catch (e, s) {
-      print(e);
-      print(s);
-      return handleError<void>(e, (message) => Failure(message)).value;
-    }
+  Future<ResponseEntity> signOut() {
+    return tryWorkWithResponse(() => auth.signOut());
   }
 
   Future<Either<Failure, Stream<T>>> signUp(
       String firstName, String lastName, String email, String password) async {
-    try {
+    return tryFutureWork<Stream<T>>(() async {
       final user = await auth.signUp(email, password);
       if (user != null) {
         final userAccountStream = userDataSource
@@ -78,18 +63,14 @@ abstract class UserRepository<T extends FirebaseProfile>
         return Right(userAccountStream);
       }
       return Left(Failure('Failed to sign you up.'));
-    } catch (e, s) {
-      print(e);
-      print(s);
-      return handleError<Stream<T>>(e, (message) => Failure(message));
-    }
+    });
   }
 
   Future<Either<Failure, T>> updateUserAccount(T userAccount,
       [String phoneNumber,
       String email,
       Future<String> Function() getCode]) async {
-    try {
+    return tryFutureWork<T>(() async {
       if (email != null && email != userAccount.email) {
         await auth.changeEmail(email);
       }
@@ -104,34 +85,22 @@ abstract class UserRepository<T extends FirebaseProfile>
       } else {
         return Left(Failure("You were signed out."));
       }
-    } catch (e, s) {
-      print(e);
-      print(s);
-      return handleError<T>(e, (message) => Failure(message));
-    }
+    });
   }
 
-  Future<Either<Failure, void>> resetPassword(
+  Future<ResponseEntity> resetPassword(
     String email,
-  ) async {
-    try {
-      return Right(await auth.resetPassword(email));
-    } catch (e, s) {
-      print(e);
-      print(s);
-      return handleError<void>(e, (message) => Failure(message));
-    }
+  ) {
+    return tryWorkWithResponse(() => auth.resetPassword(email));
   }
 
-  Future<Either<Failure, UserCredential>> addPhoneNumber(
-      String phoneNumber, Future<String> Function() getCode) async {
-    try {
-      final result = await auth.setPhoneNumber(phoneNumber, getCode);
-      return Right(result);
-    } catch (e, s) {
-      print(e);
-      print(s);
-      return handleError<UserCredential>(e, (message) => Failure(message));
-    }
+  Future<ResponseEntity> addPhoneNumber(
+      String phoneNumber, Future<String> Function() getCode) {
+    return tryWorkWithResponse(() => auth.setPhoneNumber(phoneNumber, getCode));
+  }
+
+  Future<ResponseEntity> changePassword(String oldPassword, String password) {
+    return tryWorkWithResponse(
+        () => auth.changePassword(oldPassword, password));
   }
 }

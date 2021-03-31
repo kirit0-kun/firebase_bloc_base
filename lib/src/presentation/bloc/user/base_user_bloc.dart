@@ -13,11 +13,12 @@ abstract class FirebaseUserBloc<T extends FirebaseProfile>
   final UserRepository<T> userRepository;
   final _user = BehaviorSubject<User>();
 
-  bool signedUp;
   StreamSubscription _sub;
   StreamSubscription<T> _userSub;
 
   Stream<User> get userChanges => _user.shareValue();
+  User get currentUserDetails => _user.value;
+  bool get isNewUser => currentUser.isNewUser;
 
   FirebaseUserBloc(this.userRepository, UserDefaults userDefaults)
       : super(userDefaults) {
@@ -38,7 +39,6 @@ abstract class FirebaseUserBloc<T extends FirebaseProfile>
   void handleTransition(BaseUserState state) {
     if (state is SignedOutState) {
       userSink.add(null);
-      signedUp = false;
       _userSub?.cancel();
     } else if (state is BaseSignedInState) {
       if (state.userAccount != currentUser) {
@@ -55,7 +55,6 @@ abstract class FirebaseUserBloc<T extends FirebaseProfile>
   }
 
   Future<Either<Failure, T>> autoSignIn([bool silent = true]) async {
-    signedUp = false;
     final Either<Failure, Stream<T>> result = await userRepository.autoSignIn();
     Completer<Either<Failure, T>> completer = handleUserStream(result);
     final futureResult = await completer.future;
@@ -65,7 +64,10 @@ abstract class FirebaseUserBloc<T extends FirebaseProfile>
 
   Result<Either<Failure, T>> login(AuthParams params);
 
-  Result<ResponseEntity> changePassword(String oldPassword, String password);
+  Result<ResponseEntity> changePassword(String oldPassword, String password) {
+    return Result(
+        resultFuture: userRepository.changePassword(oldPassword, password));
+  }
 
   Future<ResponseEntity> get signOutApi => userRepository.signOut();
 

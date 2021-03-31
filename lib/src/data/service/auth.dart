@@ -10,6 +10,7 @@ abstract class BaseAuth {
   Future<UserCredential> signIn(String email, String password);
   Future<UserCredential> signUp(String email, String password);
   Future<void> changeEmail(String email);
+  Future<void> changePassword(String oldPassword, String newPassword);
   Future<void> resetPassword(String email);
   Future<void> signOut();
   Future<UserCredential> setPhoneNumber(
@@ -30,6 +31,12 @@ class Auth implements BaseAuth {
         email: email, password: password);
     await user.user.sendEmailVerification();
     return user;
+  }
+
+  @override
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    return signIn(_firebaseAuth.currentUser.email, oldPassword)
+        .then((value) => value.user.updatePassword(newPassword));
   }
 
   @override

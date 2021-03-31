@@ -4,10 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 abstract class FirebaseProfile extends BaseProfile {
   const FirebaseProfile({
     bool active,
+    this.isNewUser,
     this.userDetails,
   }) : super(active: active);
 
   final User userDetails;
+  final bool isNewUser;
 
   @override
   String get id => userDetails?.uid;
@@ -17,7 +19,7 @@ abstract class FirebaseProfile extends BaseProfile {
   @override
   get accessToken => userDetails?.refreshToken;
 
-  FirebaseProfile copyWith({User userDetails, bool active});
+  FirebaseProfile copyWith({User userDetails, bool isNewUser, bool active});
 
   @override
   List<Object> get props => super.props
