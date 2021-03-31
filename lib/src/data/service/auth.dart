@@ -1,0 +1,105 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
+
+abstract class BaseAuth {
+  Stream<User> get userChanges;
+
+  Future<User> getUser();
+  Future<UserCredential> signIn(String email, String password);
+  Future<UserCredential> signUp(String email, String password);
+  Future<void> changeEmail(String email);
+  Future<void> resetPassword(String email);
+  Future<void> signOut();
+  Future<UserCredential> setPhoneNumber(
+      String phoneNumber, Future<String> Function() getCode);
+  Future<AuthCredential> verifyPhoneNumber(
+      String phoneNumber, Future<String> Function() getCode);
+}
+
+class Auth implements BaseAuth {
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
+  @override
+  Stream<User> get userChanges => _firebaseAuth.userChanges();
+
+  @override
+  Future<UserCredential> signUp(String email, String password) async {
+    final user = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email, password: password);
+    await user.user.sendEmailVerification();
+    return user;
+  }
+
+  @override
+  Future<void> changeEmail(String email) async {
+    await _firebaseAuth.currentUser.verifyBeforeUpdateEmail(email);
+  }
+
+  @override
+  Future<User> getUser() async {
+    User user = _firebaseAuth.currentUser;
+    return user;
+  }
+
+  @override
+  Future<UserCredential> signIn(String email, String password) async {
+    final UserCredential user = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email, password: password);
+    return user;
+  }
+
+  @override
+  Future<void> resetPassword(String email) async {
+    await _firebaseAuth.sendPasswordResetEmail(email: email);
+  }
+
+  @override
+  Future<AuthCredential> verifyPhoneNumber(
+      String newPhone, Future<String> Function() getCode) async {
+    Completer<AuthCredential> completer = Completer();
+    String storedVerificationId;
+    int resendToken;
+    await _firebaseAuth.verifyPhoneNumber(
+        phoneNumber: newPhone,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          completer.complete(credential);
+        },
+        verificationFailed: (FirebaseAuthException error) {
+          completer.completeError(error);
+        },
+        codeSent: (String verificationId, int forceResendingToken) async {
+          storedVerificationId = verificationId;
+          resendToken = forceResendingToken;
+          final code = await getCode();
+          if (code == null) {
+            completer
+                .completeError(FlutterError('Must validate your phone number'));
+          } else {
+            final credential = PhoneAuthProvider.credential(
+                verificationId: verificationId, smsCode: code);
+            completer.complete(credential);
+          }
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          storedVerificationId = verificationId;
+        });
+    final credentials = await completer.future;
+    return credentials;
+  }
+
+  @override
+  Future<UserCredential> setPhoneNumber(
+      String newPhone, Future<String> Function() getCode) async {
+    final credentials = await verifyPhoneNumber(newPhone, getCode);
+    final result =
+        await _firebaseAuth.currentUser.linkWithCredential(credentials);
+    return result;
+  }
+
+  @override
+  Future<void> signOut() async {
+    await _firebaseAuth.signOut();
+  }
+}
