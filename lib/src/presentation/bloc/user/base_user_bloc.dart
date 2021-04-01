@@ -62,7 +62,7 @@ abstract class FirebaseUserBloc<T extends FirebaseProfile>
     return futureResult;
   }
 
-  Result<Either<Failure, T>> login(AuthParams params);
+  Result<Either<Failure, T>> login(BaseAuthParams params);
 
   Result<ResponseEntity> changePassword(String oldPassword, String password) {
     return Result(

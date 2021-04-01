@@ -1,16 +1,16 @@
 import 'dart:async';
 
+import 'package:api_bloc_base/api_bloc_base.dart' as api;
 import 'package:rxdart/rxdart.dart';
 
-import '../../../../firebase_bloc_base.dart';
-import '../base_provider/provider_state.dart' as provider;
+import 'base_independant_bloc.dart';
 
 export 'working_state.dart';
 
 abstract class FilterType {}
 
 abstract class BaseListingBloc<Output, Filtering extends FilterType>
-    extends BaseIndependentBloc<Output> {
+    extends FirebaseIndependentBloc<Output> {
   final int searchDelayMillis;
 
   get finalDataStream =>
@@ -20,7 +20,7 @@ abstract class BaseListingBloc<Output, Filtering extends FilterType>
 
   BaseListingBloc(
       {this.searchDelayMillis = 1000,
-      List<Stream<provider.ProviderState>> sources = const [],
+      List<Stream<api.ProviderState>> sources = const [],
       Output currentData})
       : super(sources: sources, currentData: currentData);
 
