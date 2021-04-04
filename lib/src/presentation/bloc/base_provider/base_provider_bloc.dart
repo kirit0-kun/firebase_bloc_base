@@ -40,6 +40,7 @@ abstract class BaseProviderBloc<Input, Output>
   Future<BaseProviderState<Output>> get stateFuture => _stateFuture.future;
 
   FutureOr<Either<Failure, Stream<Input>>> get dataSource => null;
+  Future<Either<Failure, Input>> get result => null;
 
   List<Stream<BaseProviderState>> get additionalSources => [];
 
@@ -55,8 +56,6 @@ abstract class BaseProviderBloc<Input, Output>
   Timer _retryTimer;
 
   bool listening;
-
-  Future<Either<Failure, Input>> get result => null;
 
   bool get hasBranch => true;
 
