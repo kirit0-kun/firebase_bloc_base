@@ -42,7 +42,8 @@ class GroupedListingBundle<T> extends ListingBundle<T> {
 }
 
 abstract class BaseListingBloc<EntityType, Filter, Grouping, Sorting>
-    extends BaseConverterBloc<EntityType, ListingBundle<EntityType>> {
+    extends BaseConverterBloc<Map<String, EntityType>,
+        ListingBundle<EntityType>> {
   bool isSearch = false;
 
   Sorting get initialSorting => null;
@@ -68,13 +69,17 @@ abstract class BaseListingBloc<EntityType, Filter, Grouping, Sorting>
 
   final _groupingStream = BehaviorSubject<Grouping>()..add(null);
 
-  Stream<BaseProviderState<EntityType>> get source =>
-      CombineLatestStream.combine4<BaseProviderState<EntityType>, Filter,
-              Grouping, Sorting, BaseProviderState<EntityType>>(super.source,
+  Stream<BaseProviderState<Map<String, EntityType>>> get source =>
+      CombineLatestStream.combine4<
+              BaseProviderState<Map<String, EntityType>>,
+              Filter,
+              Grouping,
+              Sorting,
+              BaseProviderState<Map<String, EntityType>>>(super.source,
           _filterStream, _groupingStream, _sortingStream, (a, b, c, d) => a);
 
   BaseListingBloc({
-    BaseProviderBloc<dynamic, EntityType> sourceBloc,
+    BaseProviderBloc<dynamic, Map<String, EntityType>> sourceBloc,
   }) : super(sourceBloc: sourceBloc) {
     sorting = initialSorting;
   }

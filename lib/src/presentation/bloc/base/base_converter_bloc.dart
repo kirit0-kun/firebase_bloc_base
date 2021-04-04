@@ -31,7 +31,7 @@ abstract class MultiConverterBloc<Input, Output>
           _cancelable?.cancel();
           _cancelable = null;
         })
-        .asBroadcastStream(onCancel: (sub) => sub.cancel())
+        //.asBroadcastStream(onCancel: (sub) => sub.cancel())
         .where(shouldProcessEvents)
         .throttleTime(debounceMilliseconds, trailing: true)
         .listen(
@@ -96,12 +96,8 @@ abstract class MultiConverterBloc<Input, Output>
         _cancelable = cancelable;
         final newData = await cancelable;
         currentData = newData;
-        // if (newData != null) {
         handleData(newData);
         emitLoaded();
-        // } else {
-        //   emitError('An error occurred');
-        // }
       } catch (e, s) {
         print(e);
         print(s);
@@ -176,9 +172,9 @@ abstract class BaseConverterBloc<Input, Output>
     sourceBloc?.getData();
   }
 
-  Future<Output> convert(Map<String, Input> input);
+  Future<Output> convert(Input input);
 
-  Cancelable<Output> _work(Map<String, Input> input) {
+  Cancelable<Output> _work(Input input) {
     final result = convert(input);
     if (result is Cancelable<Output>) {
       return result;
@@ -202,12 +198,8 @@ abstract class BaseConverterBloc<Input, Output>
         _cancelable = cancelable;
         final newData = await cancelable;
         currentData = newData;
-        // if (newData != null) {
         handleData(newData);
         emitLoaded();
-        // } else {
-        //   emitError('An error occurred');
-        // }
       } catch (e, s) {
         print(e);
         print(s);

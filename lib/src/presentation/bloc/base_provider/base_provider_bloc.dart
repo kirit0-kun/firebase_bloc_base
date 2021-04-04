@@ -19,12 +19,12 @@ abstract class BaseProviderBloc<Input, Output>
   final LifecycleObserver observer;
 
   final debounceMilliseconds = Duration(milliseconds: 100);
-  final dataSubject = BehaviorSubject<Map<String, Output>>();
+  final dataSubject = BehaviorSubject<Output>();
   final stateSubject = BehaviorSubject<BaseProviderState<Output>>();
-  var _dataFuture = Completer<Map<String, Output>>();
+  var _dataFuture = Completer<Output>();
   var _stateFuture = Completer<BaseProviderState<Output>>();
 
-  Stream<Map<String, Output>> get dataStream => LazyStream(() => dataSubject
+  Stream<Output> get dataStream => LazyStream(() => dataSubject
       .shareValue()
       .asBroadcastStream(onCancel: (sub) => sub.cancel()));
   Stream<BaseProviderState<Output>> get stateStream =>
@@ -32,27 +32,21 @@ abstract class BaseProviderBloc<Input, Output>
           .shareValue()
           .asBroadcastStream(onCancel: (sub) => sub.cancel()));
 
-  Future<Map<String, Output>> get dataFuture => _dataFuture.future;
+  Future<Output> get dataFuture => _dataFuture.future;
   Future<BaseProviderState<Output>> get stateFuture => _stateFuture.future;
-
-  Future<int> get itemsLength =>
-      dataFuture.then((value) => value.length).catchError((e, s) => 0);
-
-  Future<int> getItemsLengthForPeriod([DateTime start]) =>
-      dataFuture.then((value) => value.length).catchError((e, s) => 0);
 
   FutureOr<Either<Failure, Stream<Input>>> get dataSource => null;
 
   List<Stream<BaseProviderState>> get additionalSources => [];
 
-  Lazy<Map<String, Output>> latestDataLazy;
-  Lazy<Map<String, Output>> latestCacheDataLazy;
+  Lazy<Output> latestDataLazy;
+  Lazy<Output> latestCacheDataLazy;
 
-  Map<String, Output> get latestData => latestDataLazy?.value;
-  Map<String, Output> get latestCacheData => latestCacheDataLazy?.value;
+  Output get latestData => latestDataLazy?.value;
+  Output get latestCacheData => latestCacheDataLazy?.value;
 
   StreamSubscription _listenerSub;
-  Cancelable<Map<String, Output>> _cancelable;
+  Cancelable<Output> _cancelable;
 
   Timer _retryTimer;
 
@@ -61,16 +55,6 @@ abstract class BaseProviderBloc<Input, Output>
   bool get hasBranch => true;
 
   Future<int> maxItems<T>() async => null;
-
-  Future<bool> canAddMore<T>([DateTime start]) async {
-    if (T == Output) {
-      return getItemsLengthForPeriod(start).then((value) async {
-        final max = await maxItems<T>();
-        return max == null || max < 0 || value < max;
-      });
-    }
-    return true;
-  }
 
   BaseProviderBloc({bool getOnCreate = true, this.observer})
       : super(BaseLoadingState()) {
@@ -89,17 +73,17 @@ abstract class BaseProviderBloc<Input, Output>
   void handleTransition(BaseProviderState<Output> state) {
     print('************ $this $state');
     if (state is BaseLoadedState<Output>) {
-      Map<String, Output> data = state.data;
+      Output data = state.data;
       handleData(data);
       mapData(data);
       if (_dataFuture.isCompleted) {
-        _dataFuture = Completer<Map<String, Output>>();
+        _dataFuture = Completer<Output>();
       }
       _dataFuture.complete(data);
     } else if (state is BaseErrorState<Output>) {
       dataSubject.addError(state);
       if (_dataFuture.isCompleted) {
-        _dataFuture = Completer<Map<String, Output>>();
+        _dataFuture = Completer<Output>();
       }
       _dataFuture.completeError(state);
       _retryTimer?.cancel();
@@ -114,7 +98,7 @@ abstract class BaseProviderBloc<Input, Output>
     _stateFuture.complete(state);
   }
 
-  void mapData(Map<String, Output> data) {
+  void mapData(Output data) {
     latestDataLazy = Lazy(() => data);
     latestCacheDataLazy = Lazy(() => this.latestData);
     dataSubject.add(data);
@@ -164,7 +148,7 @@ abstract class BaseProviderBloc<Input, Output>
               .any((element) => element is BaseLoadingState)) {
             emitLoading();
           } else {
-            Map<String, Output> result = {};
+            Output result;
             try {
               final data = event.value1;
               _cancelable?.cancel();
@@ -183,8 +167,7 @@ abstract class BaseProviderBloc<Input, Output>
           }
         });
     _listenerSub?.cancel();
-    _listenerSub =
-        convertStream<Map<String, Output>>(dataStream).doOnData((event) {
+    _listenerSub = convertStream<Output>(dataStream).doOnData((event) {
       emitLoading();
     }).listen(
       (event) {
@@ -212,16 +195,16 @@ abstract class BaseProviderBloc<Input, Output>
     _retryTimer?.cancel();
   }
 
-  void handleData(Map<String, Output> data) {}
+  void handleData(Output data) {}
 
-  Future<Map<String, Output>> convert(Input input);
+  Future<Output> convert(Input input);
 
-  Cancelable<Map<String, Output>> _work(Input input) {
+  Cancelable<Output> _work(Input input) {
     final result = convert(input);
-    if (result is Cancelable<Map<String, Output>>) {
+    if (result is Cancelable<Output>) {
       return result;
     } else {
-      final completer = Completer<Map<String, Output>>();
+      final completer = Completer<Output>();
       completer.complete(result);
       return Cancelable(completer, () {
         // if (!completer.isCompleted) {
@@ -250,8 +233,7 @@ abstract class BaseProviderBloc<Input, Output>
     return BaseLoadingState<Output>();
   }
 
-  BaseProviderState<Output> createLoadedState<Output>(
-      Map<String, Output> data) {
+  BaseProviderState<Output> createLoadedState<Output>(Output data) {
     return BaseLoadedState<Output>(data);
   }
 
@@ -263,7 +245,7 @@ abstract class BaseProviderBloc<Input, Output>
     emit(createLoadingState<Output>());
   }
 
-  void emitLoaded(Map<String, Output> data) {
+  void emitLoaded(Output data) {
     emit(createLoadedState<Output>(data));
   }
 
@@ -272,20 +254,20 @@ abstract class BaseProviderBloc<Input, Output>
   }
 
   Stream<BaseProviderState<Out>> transformStream<Out>(
-      {Map<String, Out> outData, Stream<Map<String, Out>> outStream}) {
+      {Out outData, Stream<Map<String, Out>> outStream}) {
     if (outStream != null) {
       return CombineLatestStream.list([stateStream, outStream]).map((event) {
         return _switch<Out>(event.first, event.last);
       }).asBroadcastStream(onCancel: (sub) => sub.cancel());
     } else {
       return stateStream.map((value) {
-        return _switch<Out>(value, outData ?? <String, Out>{});
+        return _switch<Out>(value, outData);
       }).asBroadcastStream(onCancel: (sub) => sub.cancel());
     }
   }
 
   BaseProviderState<Out> _switch<Out>(
-      BaseProviderState<Output> value, Map<String, Out> outData) {
+      BaseProviderState<Output> value, Out outData) {
     if (value is BaseLoadingState<Output>) {
       return createLoadingState<Out>();
     } else if (value is BaseErrorState<Output>) {

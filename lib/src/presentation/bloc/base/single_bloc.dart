@@ -22,7 +22,9 @@ class SingleBundle<T> extends BaseSingleBundle<T> {
 
 abstract class SingleBloc<EntityType>
     extends BaseSingleBloc<EntityType, SingleBundle<EntityType>> {
-  SingleBloc({String id, BaseProviderBloc<dynamic, EntityType> providerBloc})
+  SingleBloc(
+      {String id,
+      BaseProviderBloc<dynamic, Map<String, EntityType>> providerBloc})
       : super(id: id, providerBloc: providerBloc);
 
   @override
@@ -42,7 +44,7 @@ abstract class SingleBloc<EntityType>
 
 abstract class BaseSingleBloc<EntityType,
         BundleType extends BaseSingleBundle<EntityType>>
-    extends BaseConverterBloc<EntityType, BundleType> {
+    extends BaseConverterBloc<Map<String, EntityType>, BundleType> {
   static const DELETION_OPERATION = 'DELETION_OPERATION';
 
   final String id;
@@ -51,7 +53,9 @@ abstract class BaseSingleBloc<EntityType,
 
   bool isEdit = false;
 
-  BaseSingleBloc({this.id, BaseProviderBloc<dynamic, EntityType> providerBloc})
+  BaseSingleBloc(
+      {this.id,
+      BaseProviderBloc<dynamic, Map<String, EntityType>> providerBloc})
       : super(sourceBloc: providerBloc);
 
   @mustCallSuper

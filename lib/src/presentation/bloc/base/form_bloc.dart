@@ -45,7 +45,7 @@ abstract class BaseFormBloc<EntityType,
   FormBundleType get currentData => bundle;
 
   @override
-  Future<FormBundleType> convert(Map<String, EntityType> input) async {
+  Future<FormBundleType> convert(EntityType input) async {
     return currentData;
   }
 

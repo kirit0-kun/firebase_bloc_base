@@ -14,8 +14,12 @@ class BaseLoadingState<T> extends BaseProviderState<T> {
   const BaseLoadingState();
 }
 
+class InvalidatedState<T> extends BaseProviderState<T> {
+  const InvalidatedState();
+}
+
 class BaseLoadedState<T> extends BaseProviderState<T> {
-  final Map<String, T> data;
+  final T data;
 
   const BaseLoadedState(this.data);
 
