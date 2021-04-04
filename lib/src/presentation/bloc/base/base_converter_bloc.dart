@@ -59,7 +59,7 @@ abstract class MultiConverterBloc<Input, Output>
           Stream<List<BaseProviderState>> input) =>
       input;
 
-  Input combineSources(List<BaseProviderState> events);
+  Input combineSources(List<BaseLoadedState> events);
 
   Future<Output> convert(Input input);
 
@@ -91,7 +91,7 @@ abstract class MultiConverterBloc<Input, Output>
       emitLoading();
     } else if (events.every((event) => event is BaseLoadedState)) {
       try {
-        final data = combineSources(events);
+        final data = combineSources(events.cast<BaseLoadedState>());
         final cancelable = _work(data);
         _cancelable = cancelable;
         final newData = await cancelable;

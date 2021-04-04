@@ -24,6 +24,10 @@ abstract class BaseProviderBloc<Input, Output>
   var _dataFuture = Completer<Output>();
   var _stateFuture = Completer<BaseProviderState<Output>>();
 
+  final _ownDataStateController = StreamController<BaseProviderState<Input>>();
+  Stream<BaseProviderState<Input>> get originalDataStream =>
+      _ownDataStateController.stream;
+
   Stream<Output> get dataStream => LazyStream(() => dataSubject
       .shareValue()
       .asBroadcastStream(onCancel: (sub) => sub.cancel()));
@@ -51,6 +55,8 @@ abstract class BaseProviderBloc<Input, Output>
   Timer _retryTimer;
 
   bool listening;
+
+  Future<Either<Failure, Input>> get result => null;
 
   bool get hasBranch => true;
 
@@ -116,6 +122,20 @@ abstract class BaseProviderBloc<Input, Output>
       },
       (r) {
         _handleStream(r);
+      },
+    );
+  }
+
+  Future<void> _handleDataRequest(
+      FutureOr<Either<Failure, Input>> result) async {
+    emitLoading();
+    final operation = await result;
+    operation.fold(
+      (l) {
+        emitError(l.message);
+      },
+      (r) {
+        _handleStream(Stream.value(r));
       },
     );
   }
@@ -222,10 +242,13 @@ abstract class BaseProviderBloc<Input, Output>
   @mustCallSuper
   void getData() {
     listening = true;
+    final result = this.result;
     if (dataSource != null) {
       _handleOperation(dataSource);
     } else if (additionalSources.isNotEmpty) {
       _handleStream(Stream.value(null));
+    } else if (result != null) {
+      _handleDataRequest(result);
     }
   }
 
