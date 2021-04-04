@@ -1,33 +1,17 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:dartz/dartz.dart';
+import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
 
-abstract class FirebaseRepository extends BaseRepository {
+abstract class FirebaseRepository {
   const FirebaseRepository();
 
-  Either<Failure, T> tryWork<T>(FutureOr<Either<Failure, T>> work(),
-      Failure createFailure(String message),
-      [String customErrorIfNoMessage]) {
-    try {
-      final result = work();
-      return result;
-    } catch (e, s) {
-      print(e);
-      print(s);
-      return handleError<T>(e,
-          createFailure: createFailure,
-          customErrorIfNoMessage: customErrorIfNoMessage);
-    }
-  }
-
-  Future<Either<Failure, T>> tryFutureWork<T>(
-      FutureOr<Either<Failure, T>> work(),
+  Future<Either<Failure, T>> tryWork<T>(FutureOr<T> work(),
       [String customErrorIfNoMessage,
       Failure createFailure(String message)]) async {
     try {
       final result = await work();
-      return result;
+      return Right(result);
     } catch (e, s) {
       print(e);
       print(s);
