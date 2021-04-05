@@ -19,10 +19,10 @@ abstract class MultiConverterBloc<Input, Output>
 
   List<Stream<BaseProviderState>> get sources => [];
 
-  final _eventsSubject = BehaviorSubject<List<BaseProviderState>>();
+  final _eventsSubject = StreamController<List<BaseProviderState>>();
   StreamSink<List<BaseProviderState>> get eventSink => _eventsSubject.sink;
   Stream<List<BaseProviderState>> get eventStream =>
-      _eventsSubject.shareValue();
+      _eventsSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
 
   MultiConverterBloc() : super() {
     subscription = convertStream(eventStream)
@@ -122,7 +122,7 @@ abstract class MultiConverterBloc<Input, Output>
   Future<void> close() {
     subscription?.cancel();
     _cancelable?.cancel();
-    _eventsSubject.drain().then((value) => _eventsSubject.close());
+    _eventsSubject.close();
     return super.close();
   }
 }
@@ -140,11 +140,10 @@ abstract class BaseConverterBloc<Input, Output>
 
   final BaseProviderBloc<dynamic, Input> sourceBloc;
 
-  final _eventsSubject = BehaviorSubject<BaseProviderState<Input>>();
+  final _eventsSubject = StreamController<BaseProviderState<Input>>();
   StreamSink<BaseProviderState<Input>> get eventSink => _eventsSubject.sink;
-  Stream<BaseProviderState<Input>> get eventStream => _eventsSubject
-      .shareValue()
-      .asBroadcastStream(onCancel: (sub) => sub.cancel());
+  Stream<BaseProviderState<Input>> get eventStream =>
+      _eventsSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
 
   BaseConverterBloc({this.sourceBloc}) : super() {
     subscription = eventStream
@@ -223,7 +222,7 @@ abstract class BaseConverterBloc<Input, Output>
   Future<void> close() {
     subscription?.cancel();
     _cancelable?.cancel();
-    _eventsSubject.drain().then((value) => _eventsSubject.close());
+    _eventsSubject.close();
     return super.close();
   }
 }

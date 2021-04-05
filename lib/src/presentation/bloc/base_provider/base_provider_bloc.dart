@@ -24,9 +24,7 @@ abstract class BaseProviderBloc<Input, Output>
   var _dataFuture = Completer<Output>();
   var _stateFuture = Completer<BaseProviderState<Output>>();
 
-  final _ownDataStateController = StreamController<BaseProviderState<Input>>();
-  Stream<BaseProviderState<Input>> get originalDataStream =>
-      _ownDataStateController.stream;
+  Output get currentData => dataSubject.value;
 
   Stream<Output> get dataStream => LazyStream(() => dataSubject
       .shareValue()
@@ -76,7 +74,6 @@ abstract class BaseProviderBloc<Input, Output>
   }
 
   void handleTransition(BaseProviderState<Output> state) {
-    print('************ $this $state');
     if (state is BaseLoadedState<Output>) {
       Output data = state.data;
       handleData(data);
@@ -96,11 +93,15 @@ abstract class BaseProviderBloc<Input, Output>
         if (listening) getData();
       });
     }
-    stateSubject.add(state);
-    if (_stateFuture.isCompleted) {
-      _stateFuture = Completer<BaseProviderState<Output>>();
+    if (state is! InvalidatedState<Output>) {
+      stateSubject.add(state);
+      if (_stateFuture.isCompleted) {
+        _stateFuture = Completer<BaseProviderState<Output>>();
+      }
+      _stateFuture.complete(state);
+    } else {
+      reload();
     }
-    _stateFuture.complete(state);
   }
 
   void mapData(Output data) {
@@ -249,6 +250,10 @@ abstract class BaseProviderBloc<Input, Output>
     } else if (result != null) {
       _handleDataRequest(result);
     }
+  }
+
+  void reload() {
+    getData();
   }
 
   BaseProviderState<Output> createLoadingState<Output>() {
