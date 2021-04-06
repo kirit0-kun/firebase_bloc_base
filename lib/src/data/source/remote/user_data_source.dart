@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_bloc_base/firebase_bloc_base.dart';
 
 abstract class UserDataSource<T extends FirebaseProfile>
-    extends BaseDataSource {
+    extends FirebaseDataSource {
   Future<T> getUser(String id);
   Stream<T> listenToUser(String id);
   Stream<T> createUser(User user,
