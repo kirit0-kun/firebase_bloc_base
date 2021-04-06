@@ -25,7 +25,7 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
 
   Map<String, String> _operationStack = {};
 
-  BaseWorkingBloc() : super(LoadingState());
+  BaseWorkingBloc({this.currentData}) : super(LoadingState());
 
   @override
   void onChange(change) {

@@ -15,7 +15,7 @@ class UserLoadingState extends UserState {
   List<Object> get props => [];
 }
 
-abstract class SignedInState extends UserState {
+class SignedInState extends UserState {
   final FirebaseProfile userAccount;
   const SignedInState(this.userAccount);
 
@@ -23,7 +23,7 @@ abstract class SignedInState extends UserState {
   List<Object> get props => [this.userAccount];
 }
 
-abstract class SignedUpState extends SignedInState {
+class SignedUpState extends SignedInState {
   const SignedUpState(FirebaseProfile userAccount) : super(userAccount);
 }
 

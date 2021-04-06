@@ -25,7 +25,9 @@ abstract class UserRepository<UserType extends FirebaseProfile>
       if (user != null) {
         final userAccountStream = userDataSource
             .listenToUser(user.user.uid)
-            .map((event) => event?.copyWith(userDetails: user.user));
+            .map((event) => event?.copyWith(
+                userDetails: user.user,
+                firstTime: user.additionalUserInfo.isNewUser));
         return userAccountStream;
       }
       throw Exception("You're not signed in");
@@ -58,7 +60,8 @@ abstract class UserRepository<UserType extends FirebaseProfile>
               firstName: firstName,
               lastName: lastName,
               requireConfirmation: false)
-          .map((event) => event?.copyWith(userDetails: user.user));
+          .map((event) =>
+              event?.copyWith(userDetails: user.user, firstTime: true));
       return userAccountStream;
     });
   }

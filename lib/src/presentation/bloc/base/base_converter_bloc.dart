@@ -12,8 +12,6 @@ abstract class MultiConverterBloc<Input, Output>
     extends BaseWorkingBloc<Input, Output> {
   final debounceMilliseconds = Duration(milliseconds: 100);
 
-  Output currentData;
-
   StreamSubscription subscription;
   Cancelable<Output> _cancelable;
 
@@ -24,7 +22,7 @@ abstract class MultiConverterBloc<Input, Output>
   Stream<List<BaseProviderState>> get eventStream =>
       _eventsSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
 
-  MultiConverterBloc() : super() {
+  MultiConverterBloc({Output currentData}) : super(currentData: currentData) {
     subscription = convertStream(eventStream)
         .doOnData((event) {
           emitLoading();
@@ -131,8 +129,6 @@ abstract class BaseConverterBloc<Input, Output>
     extends BaseWorkingBloc<Input, Output> {
   final debounceMilliseconds = Duration(milliseconds: 100);
 
-  Output currentData;
-
   StreamSubscription subscription;
   Cancelable<Output> _cancelable;
 
@@ -145,7 +141,8 @@ abstract class BaseConverterBloc<Input, Output>
   Stream<BaseProviderState<Input>> get eventStream =>
       _eventsSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
 
-  BaseConverterBloc({this.sourceBloc}) : super() {
+  BaseConverterBloc({this.sourceBloc, Output currentData})
+      : super(currentData: currentData) {
     subscription = eventStream
         .doOnData((event) {
           emitLoading();

@@ -3,12 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 abstract class FirebaseProfile extends Equatable {
   const FirebaseProfile({
-    this.isNewUser,
+    this.firstTime,
     this.userDetails,
   });
 
   final User userDetails;
-  final bool isNewUser;
+  final bool firstTime;
 
   String get id => userDetails?.uid;
   String get email => userDetails?.email;
@@ -16,12 +16,12 @@ abstract class FirebaseProfile extends Equatable {
 
   bool get emailVerified => userDetails?.emailVerified == true;
 
-  FirebaseProfile copyWith({User userDetails, bool isNewUser, bool active});
+  FirebaseProfile copyWith({User userDetails, bool firstTime});
 
   @override
   List<Object> get props => [
         userDetails?.toString(),
-        isNewUser,
+        firstTime,
         id,
         email,
         phoneNumber,

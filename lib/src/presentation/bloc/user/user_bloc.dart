@@ -181,7 +181,13 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     }
   }
 
-  void emitSignedUser(FirebaseProfile currentUser) {}
+  void emitSignedUser(FirebaseProfile currentUser) {
+    if (currentUser.firstTime) {
+      emit(SignedUpState(currentUser));
+    } else {
+      emit(SignedInState(currentUser));
+    }
+  }
 
   void completeSignUp() {
     signedUp = false;
