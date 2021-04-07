@@ -13,7 +13,7 @@ import 'user_state.dart';
 class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
   final emailVerificationDaysLimit = Duration(days: 7);
 
-  final UserRepository<UserType> _userRepository;
+  final BaseUserRepository<UserType> _userRepository;
 
   final _user = BehaviorSubject<User>();
   final _userAccount = BehaviorSubject<UserType>();

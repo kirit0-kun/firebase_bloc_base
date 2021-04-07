@@ -7,12 +7,12 @@ import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
 
 import 'firebase_repository.dart';
 
-abstract class UserRepository<UserType extends FirebaseProfile>
+abstract class BaseUserRepository<UserType extends FirebaseProfile>
     extends FirebaseRepository {
   final BaseAuth auth;
-  final UserDataSource<UserType> userDataSource;
+  final BaseUserDataSource<UserType> userDataSource;
 
-  const UserRepository(this.auth, this.userDataSource);
+  const BaseUserRepository(this.auth, this.userDataSource);
 
   Stream<User> get userChanges {
     return auth.userChanges;
@@ -23,9 +23,8 @@ abstract class UserRepository<UserType extends FirebaseProfile>
     return tryWork(() async {
       final user = await auth.signIn(email, password);
       if (user != null) {
-        final userAccountStream = userDataSource
-            .listenToUser(user.user.uid)
-            .map((event) => event?.copyWith(
+        final userAccountStream = userDataSource.listenToUser(user.user).map(
+            (event) => event?.copyWith(
                 userDetails: user.user,
                 firstTime: user.additionalUserInfo.isNewUser));
         return userAccountStream;
@@ -38,9 +37,8 @@ abstract class UserRepository<UserType extends FirebaseProfile>
     return tryWork(() async {
       final user = await auth.getUser();
       if (user != null) {
-        final userAccountStream = userDataSource
-            .listenToUser(user.uid)
-            .map((event) => event?.copyWith(userDetails: user));
+        final userAccountStream = userDataSource.listenToUser(user).map(
+            (event) => event?.copyWith(userDetails: user, firstTime: false));
         return userAccountStream;
       }
       throw Exception("You're not signed in");
@@ -80,8 +78,7 @@ abstract class UserRepository<UserType extends FirebaseProfile>
       final user = await auth.getUser();
       if (user != null) {
         userAccount = userAccount.copyWith(userDetails: user);
-        final newUserType =
-            await userDataSource.updateUserAccount(userAccount, false);
+        final newUserType = await userDataSource.updateUserAccount(userAccount);
         return newUserType;
       } else {
         throw Exception("You were signed out");

@@ -9,7 +9,7 @@ import 'base_working_bloc.dart';
 export 'working_state.dart';
 
 abstract class MultiConverterBloc<Input, Output>
-    extends BaseWorkingBloc<Input, Output> {
+    extends BaseWorkingBloc<Output> {
   final debounceMilliseconds = Duration(milliseconds: 100);
 
   StreamSubscription subscription;
@@ -126,7 +126,7 @@ abstract class MultiConverterBloc<Input, Output>
 }
 
 abstract class BaseConverterBloc<Input, Output>
-    extends BaseWorkingBloc<Input, Output> {
+    extends BaseWorkingBloc<Output> {
   final debounceMilliseconds = Duration(milliseconds: 100);
 
   StreamSubscription subscription;

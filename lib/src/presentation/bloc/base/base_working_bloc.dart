@@ -10,7 +10,7 @@ import 'working_state.dart';
 
 export 'working_state.dart';
 
-abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
+abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
   static const DEFAULT_OPERATION = '_DEFAULT_OPERATION';
 
   final scrollController = ScrollController();

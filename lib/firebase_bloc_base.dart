@@ -1,5 +1,10 @@
 library firebase_bloc_base;
 
+export 'package:cloud_firestore/cloud_firestore.dart';
+export 'package:firebase_auth/firebase_auth.dart';
+export 'package:firebase_core/firebase_core.dart';
+export 'package:firebase_storage/firebase_storage.dart';
+
 export 'src/data/model/remote/firebase_params.dart';
 export 'src/data/model/remote/firebase_query.dart';
 export 'src/data/repository/firebase_repository.dart';
@@ -10,6 +15,7 @@ export 'src/data/source/remote/user_data_source.dart';
 export 'src/domain/entity/base_profile.dart';
 export 'src/domain/entity/grouped_item_header.dart';
 export 'src/domain/entity/response_entity.dart';
+export 'src/domain/service/data_validator.dart';
 export 'src/presentation/bloc/base/base_converter_bloc.dart';
 export 'src/presentation/bloc/base/base_working_bloc.dart';
 export 'src/presentation/bloc/base/form_bloc.dart';

@@ -3,6 +3,16 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 
+enum SignInMethod {
+  Twitter,
+  Password,
+  EmailLink,
+  Facebook,
+  Github,
+  Google,
+  Phone,
+}
+
 abstract class BaseAuth {
   Stream<User> get userChanges;
 
@@ -10,6 +20,8 @@ abstract class BaseAuth {
   Future<UserCredential> signIn(String email, String password);
   Future<UserCredential> signUp(String email, String password);
   Future<void> changeEmail(String email);
+  Future<bool> checkEmailExists(String email);
+  Future<List<SignInMethod>> getSignInMethodsForEmail(String email);
   Future<void> changePassword(String oldPassword, String newPassword);
   Future<void> resetPassword(String email);
   Future<void> signOut();
@@ -19,8 +31,18 @@ abstract class BaseAuth {
       String phoneNumber, Future<String> Function() getCode);
 }
 
-class Auth implements BaseAuth {
+class SimpleAuth implements BaseAuth {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
+  static final _signInMethods = {
+    TwitterAuthProvider.TWITTER_SIGN_IN_METHOD: SignInMethod.Twitter,
+    EmailAuthProvider.EMAIL_LINK_SIGN_IN_METHOD: SignInMethod.EmailLink,
+    EmailAuthProvider.EMAIL_PASSWORD_SIGN_IN_METHOD: SignInMethod.Password,
+    FacebookAuthProvider.FACEBOOK_SIGN_IN_METHOD: SignInMethod.Facebook,
+    GithubAuthProvider.GITHUB_SIGN_IN_METHOD: SignInMethod.Github,
+    GoogleAuthProvider.GOOGLE_SIGN_IN_METHOD: SignInMethod.Google,
+    PhoneAuthProvider.PHONE_SIGN_IN_METHOD: SignInMethod.Phone,
+  };
 
   @override
   Stream<User> get userChanges => _firebaseAuth.userChanges();
@@ -60,6 +82,18 @@ class Auth implements BaseAuth {
   @override
   Future<void> resetPassword(String email) async {
     await _firebaseAuth.sendPasswordResetEmail(email: email);
+  }
+
+  @override
+  Future<List<SignInMethod>> getSignInMethodsForEmail(String email) async {
+    return await _firebaseAuth.fetchSignInMethodsForEmail(email).then((value) =>
+        value.map((e) => _signInMethods[e]).whereType<SignInMethod>().toList());
+  }
+
+  @override
+  Future<bool> checkEmailExists(String email) async {
+    final result = await _firebaseAuth.fetchSignInMethodsForEmail(email);
+    return result.isNotEmpty;
   }
 
   @override
