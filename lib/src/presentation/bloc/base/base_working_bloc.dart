@@ -65,14 +65,14 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     }
   }
 
-  Future<void> handleOperation<T>(FutureOr<Either<Failure, T>> result,
+  Future<Operation> handleOperation<T>(FutureOr<Either<Failure, T>> result,
       {String loadingMessage,
       String successMessage,
       String operationTag}) async {
     operationTag ??= DEFAULT_OPERATION;
     startOperation(loadingMessage ?? 'Loading', operationTag: operationTag);
     final future = await result;
-    handleResponse(future,
+    return handleResponse(future,
         successMessage: successMessage, operationTag: operationTag);
   }
 
@@ -83,10 +83,10 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     });
   }
 
-  void handleResponse<T>(Either<Failure, T> result,
+  Operation handleResponse<T>(Either<Failure, T> result,
       {String successMessage, String operationTag}) {
     operationTag ??= DEFAULT_OPERATION;
-    result.fold(
+    return result.fold(
         (l) =>
             failedOperation(l.message ?? 'Error', operationTag: operationTag),
         (r) => successfulOperation(successMessage ?? 'Success',
@@ -120,27 +120,31 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     checkOperations();
   }
 
-  void successfulOperation(String message,
+  SuccessfulOperationState<Output, dynamic> successfulOperation(String message,
       {String operationTag, dynamic result}) {
     operationTag ??= DEFAULT_OPERATION;
-    emit(SuccessfulOperationState(
+    final newState = SuccessfulOperationState(
         data: currentData,
         successMessage: message,
         operationTag: operationTag,
-        result: result));
+        result: result);
+    emit(newState);
     _operationStack.remove(operationTag);
     checkOperations();
+    return newState;
   }
 
-  void failedOperation(String message, {String operationTag}) {
+  FailedOperationState<Output> failedOperation(String message, {String operationTag}) {
     operationTag ??= DEFAULT_OPERATION;
-    emit(FailedOperationState(
+    final newState = FailedOperationState(
       data: currentData,
       errorMessage: message,
       operationTag: operationTag,
-    ));
+    );
+    emit(newState);
     _operationStack.remove(operationTag);
     checkOperations();
+    return newState;
   }
 
   void scrollUp() {
