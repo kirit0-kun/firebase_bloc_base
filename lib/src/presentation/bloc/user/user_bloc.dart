@@ -169,24 +169,24 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     if (currentUser == null) {
       emit(SignedOutState());
     } else {
-      final verificationLimit = currentUser.userDetails.metadata.creationTime
-          .add(emailVerificationDaysLimit);
-      final now = DateTime.now();
-      if (currentUser.email != 'testing@test.com' &&
-          !currentUser.emailVerified &&
-          verificationLimit.isBefore(now)) {
-        emit(SignedInWithNoVerifiedEmailState(currentUser));
-      } else {
-        emitSignedUser(currentUser);
-      }
+      emitSignedUser(currentUser);
     }
   }
 
   void emitSignedUser(UserType currentUser) {
-    if (currentUser.firstTime) {
-      emit(SignedUpState(currentUser));
+    final verificationLimit = currentUser.userDetails.metadata.creationTime
+        .add(emailVerificationDaysLimit);
+    final now = DateTime.now();
+    if (currentUser.email != 'testing@test.com' &&
+        !currentUser.emailVerified &&
+        verificationLimit.isBefore(now)) {
+      emit(SignedInWithNoVerifiedEmailState(currentUser));
     } else {
-      emit(SignedInState(currentUser));
+      if (currentUser.firstTime) {
+        emit(SignedUpState(currentUser));
+      } else {
+        emit(SignedInState(currentUser));
+      }
     }
   }
 
