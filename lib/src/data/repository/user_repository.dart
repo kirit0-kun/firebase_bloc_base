@@ -27,8 +27,8 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
     throw Exception("You're not signed in");
   }
 
-  Stream<UserType> signUp(UserCredential user, String firstName,
-      String lastName, String email, String password) {
+  Stream<UserType> signUp(
+      UserCredential user, String firstName, String lastName) {
     if (user != null) {
       final userAccountStream = userDataSource
           .createUser(user.user,
@@ -66,7 +66,7 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
       String firstName, String lastName, String email, String password) async {
     return tryWork(() async {
       final user = await auth.signUp(email, password);
-      return signUp(user, firstName, lastName, email, password);
+      return signUp(user, firstName, lastName);
     });
   }
 
