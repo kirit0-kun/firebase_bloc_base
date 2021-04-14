@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_bloc_base/firebase_bloc_base.dart';
 import 'package:firebase_bloc_base/src/data/repository/user_repository.dart';
 import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../../../../firebase_bloc_base.dart';
 import 'user_state.dart';
 
 class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
@@ -109,9 +109,9 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     return result;
   }
 
-  Future<Failure> signOut() async {
+  Future<ResponseEntity> signOut() async {
     final result = await _userRepository.signOut();
-    if (result == null) {
+    if (result is Success) {
       currentUser = null;
       emit(SignedOutState());
     }
