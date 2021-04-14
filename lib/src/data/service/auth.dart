@@ -18,6 +18,7 @@ abstract class BaseAuth {
 
   Future<User> getUser();
   Future<UserCredential> signIn(String email, String password);
+  Future<UserCredential> anonymousSignIn();
   Future<UserCredential> signUp(String email, String password);
   Future<void> changeEmail(String email);
   Future<bool> checkEmailExists(String email);
@@ -76,6 +77,12 @@ class SimpleAuth implements BaseAuth {
   Future<UserCredential> signIn(String email, String password) async {
     final UserCredential user = await _firebaseAuth.signInWithEmailAndPassword(
         email: email, password: password);
+    return user;
+  }
+
+  @override
+  Future<UserCredential> anonymousSignIn() async {
+    final UserCredential user = await _firebaseAuth.signInAnonymously();
     return user;
   }
 
