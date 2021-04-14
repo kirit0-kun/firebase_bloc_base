@@ -66,7 +66,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     signedUp = false;
     final Either<Failure, Stream<UserType>> result =
         await _userRepository.autoSignIn();
-    Completer<Either<Failure, UserType>> completer = _userCompleter(result);
+    Completer<Either<Failure, UserType>> completer = userCompleter(result);
     final futureResult = await completer.future;
     futureResult.fold((l) => emit(SignedOutState()), (UserType r) {});
   }
@@ -76,7 +76,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     signedUp = false;
     final result =
         await _userRepository.signInWithEmailAndPassword(email, password);
-    Completer<Either<Failure, UserType>> completer = _userCompleter(result);
+    Completer<Either<Failure, UserType>> completer = userCompleter(result);
     return completer.future;
   }
 
@@ -85,7 +85,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     signedUp = true;
     final result = await _userRepository.signUpWithEmailAndPassword(
         firstName, lastName, email, password);
-    Completer<Either<Failure, UserType>> completer = _userCompleter(result);
+    Completer<Either<Failure, UserType>> completer = userCompleter(result);
     return completer.future;
   }
 
@@ -131,7 +131,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     return Left(Failure('Failed to send the email.'));
   }
 
-  Completer<Either<Failure, UserType>> _userCompleter(
+  Completer<Either<Failure, UserType>> userCompleter(
       Either<Failure, Stream<UserType>> result) {
     Completer<Either<Failure, UserType>> completer = Completer();
     result.fold((l) {
