@@ -131,9 +131,9 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     return Left(Failure('Failed to send the email.'));
   }
 
-  Completer<Either<Failure, UserType>> userCompleter(
-      Either<Failure, Stream<UserType>> result) {
-    Completer<Either<Failure, UserType>> completer = Completer();
+  Completer<Either<Failure, T>> userCompleter<T extends UserType>(
+      Either<Failure, Stream<T>> result) {
+    Completer<Either<Failure, T>> completer = Completer();
     result.fold((l) {
       if (!completer.isCompleted) {
         completer.complete(Left(l));
@@ -141,8 +141,8 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     }, (r) {
       _detailsSubscription?.cancel();
       _detailsSubscription = null;
-      final newStream = CombineLatestStream.combine2<UserType, User, UserType>(
-          r, userChanges, (userAccount, user) {
+      final newStream = CombineLatestStream.combine2<T, User, T>(r, userChanges,
+          (userAccount, user) {
         if (userAccount != null && user != null) {
           return syncUserDetails(userAccount, user);
         }
