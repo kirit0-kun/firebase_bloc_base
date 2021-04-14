@@ -154,11 +154,13 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
         }
         _handleUser(event);
       }, onError: (e, s) {
+        print(e);
+        print(s);
         if (!completer.isCompleted) {
           completer.completeError(e, s);
         }
         signOut();
-        emit(SignedOutState());
+        //emit(SignedOutState());
       });
     });
     return completer;
