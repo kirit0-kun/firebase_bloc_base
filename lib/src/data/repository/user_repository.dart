@@ -22,16 +22,19 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
     return auth.userChanges;
   }
 
-  Stream<UserType> signIn(User user, bool isNewUser) {
+  Stream<T> signIn<T extends UserType>(User user, bool isNewUser) {
     if (user != null) {
-      final userAccountStream = userDataSource.listenToUser(user).map(
-          (event) => event?.copyWith(userDetails: user, firstTime: isNewUser));
+      final userAccountStream = userDataSource
+          .listenToUser(user)
+          .map((event) =>
+              event?.copyWith(userDetails: user, firstTime: isNewUser))
+          .cast<T>();
       return userAccountStream;
     }
     throw Exception(notSignedInError);
   }
 
-  Stream<UserType> signUp(
+  Stream<T> signUp<T extends UserType>(
       UserCredential user, String firstName, String lastName) {
     if (user != null) {
       final userAccountStream = userDataSource
@@ -40,7 +43,8 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
               lastName: lastName,
               requireConfirmation: false)
           .map((event) =>
-              event?.copyWith(userDetails: user.user, firstTime: true));
+              event?.copyWith(userDetails: user.user, firstTime: true))
+          .cast<T>();
       return userAccountStream;
     } else {
       throw Exception(requestError);
@@ -51,14 +55,14 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
       String email, String password) async {
     return tryWork(() async {
       final user = await auth.signIn(email, password);
-      return signIn(user.user, user.additionalUserInfo.isNewUser);
+      return signIn<UserType>(user.user, user.additionalUserInfo.isNewUser);
     });
   }
 
   Future<Either<Failure, Stream<UserType>>> autoSignIn() async {
     return tryWork(() async {
       final user = await auth.getUser();
-      return signIn(user, false);
+      return signIn<UserType>(user, false);
     });
   }
 
