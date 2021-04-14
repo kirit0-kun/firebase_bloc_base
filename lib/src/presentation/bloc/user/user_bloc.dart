@@ -74,7 +74,8 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
   Future<Either<Failure, UserType>> signIn(
       String email, String password) async {
     signedUp = false;
-    final result = await _userRepository.signIn(email, password);
+    final result =
+        await _userRepository.signInWithEmailAndPassword(email, password);
     Completer<Either<Failure, UserType>> completer = _userCompleter(result);
     return completer.future;
   }
@@ -82,8 +83,8 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
   Future<Either<Failure, UserType>> signUp(
       String firstName, String lastName, String email, String password) async {
     signedUp = true;
-    final result =
-        await _userRepository.signUp(firstName, lastName, email, password);
+    final result = await _userRepository.signUpWithEmailAndPassword(
+        firstName, lastName, email, password);
     Completer<Either<Failure, UserType>> completer = _userCompleter(result);
     return completer.future;
   }

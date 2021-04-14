@@ -18,41 +18,18 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
     return auth.userChanges;
   }
 
-  Future<Either<Failure, Stream<UserType>>> signIn(
-      String email, String password) async {
-    return tryWork(() async {
-      final user = await auth.signIn(email, password);
-      if (user != null) {
-        final userAccountStream = userDataSource.listenToUser(user.user).map(
-            (event) => event?.copyWith(
-                userDetails: user.user,
-                firstTime: user.additionalUserInfo.isNewUser));
-        return userAccountStream;
-      }
-      throw Exception("You're not signed in");
-    });
+  Stream<UserType> signIn(User user, bool isNewUser) {
+    if (user != null) {
+      final userAccountStream = userDataSource.listenToUser(user).map(
+          (event) => event?.copyWith(userDetails: user, firstTime: isNewUser));
+      return userAccountStream;
+    }
+    throw Exception("You're not signed in");
   }
 
-  Future<Either<Failure, Stream<UserType>>> autoSignIn() async {
-    return tryWork(() async {
-      final user = await auth.getUser();
-      if (user != null) {
-        final userAccountStream = userDataSource.listenToUser(user).map(
-            (event) => event?.copyWith(userDetails: user, firstTime: false));
-        return userAccountStream;
-      }
-      throw Exception("You're not signed in");
-    });
-  }
-
-  Future<ResponseEntity> signOut() async {
-    return tryWorkWithResponse(() => auth.signOut());
-  }
-
-  Future<Either<Failure, Stream<UserType>>> signUp(
-      String firstName, String lastName, String email, String password) async {
-    return tryWork(() async {
-      final user = await auth.signUp(email, password);
+  Stream<UserType> signUp(UserCredential user, String firstName,
+      String lastName, String email, String password) {
+    if (user != null) {
       final userAccountStream = userDataSource
           .createUser(user.user,
               firstName: firstName,
@@ -61,6 +38,35 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
           .map((event) =>
               event?.copyWith(userDetails: user.user, firstTime: true));
       return userAccountStream;
+    } else {
+      throw Exception("Couldn't complete your request");
+    }
+  }
+
+  Future<Either<Failure, Stream<UserType>>> signInWithEmailAndPassword(
+      String email, String password) async {
+    return tryWork(() async {
+      final user = await auth.signIn(email, password);
+      return signIn(user.user, user.additionalUserInfo.isNewUser);
+    });
+  }
+
+  Future<Either<Failure, Stream<UserType>>> autoSignIn() async {
+    return tryWork(() async {
+      final user = await auth.getUser();
+      return signIn(user, false);
+    });
+  }
+
+  Future<ResponseEntity> signOut() async {
+    return tryWorkWithResponse(() => auth.signOut());
+  }
+
+  Future<Either<Failure, Stream<UserType>>> signUpWithEmailAndPassword(
+      String firstName, String lastName, String email, String password) async {
+    return tryWork(() async {
+      final user = await auth.signUp(email, password);
+      return signUp(user, firstName, lastName, email, password);
     });
   }
 
