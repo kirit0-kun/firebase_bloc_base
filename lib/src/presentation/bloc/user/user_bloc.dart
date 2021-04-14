@@ -25,7 +25,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
 
   bool signedUp;
 
-  FirebaseProfile currentUser;
+  UserType currentUser;
 
   BaseUserBloc(this._userRepository) : super(UserLoadingState()) {
     autoSignIn().catchError((e, s) {
@@ -182,7 +182,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     }
   }
 
-  void emitSignedUser(FirebaseProfile currentUser) {
+  void emitSignedUser(UserType currentUser) {
     if (currentUser.firstTime) {
       emit(SignedUpState(currentUser));
     } else {

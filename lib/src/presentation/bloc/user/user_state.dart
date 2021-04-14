@@ -15,20 +15,21 @@ class UserLoadingState extends UserState {
   List<Object> get props => [];
 }
 
-class SignedInState extends UserState {
-  final FirebaseProfile userAccount;
+class SignedInState<UserType extends FirebaseProfile> extends UserState {
+  final UserType userAccount;
   const SignedInState(this.userAccount);
 
   @override
   List<Object> get props => [this.userAccount];
 }
 
-class SignedUpState extends SignedInState {
-  const SignedUpState(FirebaseProfile userAccount) : super(userAccount);
+class SignedUpState<UserType extends FirebaseProfile> extends SignedInState {
+  const SignedUpState(UserType userAccount) : super(userAccount);
 }
 
-class SignedInWithNoVerifiedEmailState extends SignedInState {
-  const SignedInWithNoVerifiedEmailState(FirebaseProfile userAccount)
+class SignedInWithNoVerifiedEmailState<UserType extends FirebaseProfile>
+    extends SignedInState {
+  const SignedInWithNoVerifiedEmailState(UserType userAccount)
       : super(userAccount);
 }
 
