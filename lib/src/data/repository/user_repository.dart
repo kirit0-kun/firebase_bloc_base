@@ -14,6 +14,10 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
 
   const BaseUserRepository(this.auth, this.userDataSource);
 
+  String get notSignedInError => "You're not signed in";
+  String get signedOutError => "You were signed out";
+  String get requestError => "Couldn't complete your request";
+
   Stream<User> get userChanges {
     return auth.userChanges;
   }
@@ -24,7 +28,7 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
           (event) => event?.copyWith(userDetails: user, firstTime: isNewUser));
       return userAccountStream;
     }
-    throw Exception("You're not signed in");
+    throw Exception(notSignedInError);
   }
 
   Stream<UserType> signUp(
@@ -39,7 +43,7 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
               event?.copyWith(userDetails: user.user, firstTime: true));
       return userAccountStream;
     } else {
-      throw Exception("Couldn't complete your request");
+      throw Exception(requestError);
     }
   }
 
@@ -87,7 +91,7 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
         final newUserType = await userDataSource.updateUserAccount(userAccount);
         return newUserType;
       } else {
-        throw Exception("You were signed out");
+        throw Exception(signedOutError);
       }
     });
   }
