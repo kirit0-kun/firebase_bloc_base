@@ -106,4 +106,13 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
       String phoneNumber, Future<String> Function() getCode) async {
     return tryWork(() => auth.setPhoneNumber(phoneNumber, getCode));
   }
+
+  Future<Either<Failure, bool>> checkEmailExists(String email) async {
+    return tryWork(() => auth.checkEmailExists(email));
+  }
+
+  Future<Either<Failure, List<SignInMethod>>> getSignInMethodsForEmail(
+      String email) async {
+    return tryWork(() => auth.getSignInMethodsForEmail(email));
+  }
 }
