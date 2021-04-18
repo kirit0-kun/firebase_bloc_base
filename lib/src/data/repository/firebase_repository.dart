@@ -6,11 +6,12 @@ import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
 abstract class FirebaseRepository {
   const FirebaseRepository();
 
-  Future<Either<Failure, T>> tryWork<T>(FutureOr<T> work(),
+  FutureOr<Either<Failure, T>> tryWork<T>(FutureOr<T> work(),
       [String customErrorIfNoMessage,
       Failure createFailure(String message)]) async {
     try {
-      final result = await work();
+      final workSync = work();
+      final result = workSync is Future<T> ? await workSync : workSync;
       return Right(result);
     } catch (e, s) {
       print(e);
