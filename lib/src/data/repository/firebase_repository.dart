@@ -7,12 +7,24 @@ abstract class FirebaseRepository {
   const FirebaseRepository();
 
   FutureOr<Either<Failure, T>> tryWork<T>(FutureOr<T> work(),
-      [String customErrorIfNoMessage,
-      Failure createFailure(String message)]) async {
+      [String customErrorIfNoMessage, Failure createFailure(String message)]) {
     try {
       final workSync = work();
-      final result = workSync is Future<T> ? await workSync : workSync;
-      return Right(result);
+      if (workSync is Future<T>) {
+        Future<T> workAsync = workSync;
+        return workAsync
+            .then((value) => Right<Failure, T>(value))
+            .catchError((e, s) {
+          print(e);
+          print(s);
+          return handleError<T>(e,
+              createFailure: createFailure,
+              customErrorIfNoMessage: customErrorIfNoMessage);
+        });
+      } else {
+        T result = workSync;
+        return Right(result);
+      }
     } catch (e, s) {
       print(e);
       print(s);
