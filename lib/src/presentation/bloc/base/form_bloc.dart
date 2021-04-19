@@ -61,11 +61,12 @@ abstract class BaseFormBloc<EntityType,
   }
 
   BaseFormBloc(
-      {this.startPageNum,
+      {int startPageNum,
       EntityType initialObject,
       BaseProviderBloc<dynamic, EntityType> sourceBloc})
-      : super(sourceBloc: sourceBloc) {
-    statePageNum = startPageNum;
+      : startPageNum = startPageNum ?? 0,
+        super(sourceBloc: sourceBloc) {
+    statePageNum = this.startPageNum;
     initial = initialObject;
     object = initialObject;
   }
