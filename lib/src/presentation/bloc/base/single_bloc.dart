@@ -24,8 +24,9 @@ abstract class SingleBloc<EntityType>
     extends BaseSingleBloc<EntityType, SingleBundle<EntityType>> {
   SingleBloc(
       {String id,
+      EntityType initialObject,
       BaseProviderBloc<dynamic, Map<String, EntityType>> providerBloc})
-      : super(id: id, providerBloc: providerBloc);
+      : super(id: id, providerBloc: providerBloc, initialObject: initialObject);
 
   @override
   SingleBundle<EntityType> get currentData => SingleBundle(isEdit, object);
@@ -55,8 +56,15 @@ abstract class BaseSingleBloc<EntityType,
 
   BaseSingleBloc(
       {this.id,
+      EntityType initialObject,
       BaseProviderBloc<dynamic, Map<String, EntityType>> providerBloc})
-      : super(sourceBloc: providerBloc);
+      : super(sourceBloc: providerBloc) {
+    if (initialObject != null) {
+      object = initialObject;
+      temp = initialObject;
+      emitLoaded();
+    }
+  }
 
   @mustCallSuper
   void handleData(BundleType data) {
