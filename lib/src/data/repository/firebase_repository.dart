@@ -13,7 +13,7 @@ abstract class FirebaseRepository {
       if (workSync is Future<T>) {
         Future<T> workAsync = workSync;
         return workAsync
-            .then((value) => Right<Failure, T>(value))
+            .then<Either<Failure, T>>((value) => Right<Failure, T>(value))
             .catchError((e, s) {
           print(e);
           print(s);
