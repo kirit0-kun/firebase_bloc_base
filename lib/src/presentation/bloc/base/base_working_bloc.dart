@@ -11,6 +11,7 @@ import 'working_state.dart';
 export 'working_state.dart';
 
 abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
+  String get anUnexpectedErrorOccurred => 'Error';
   static const DEFAULT_OPERATION = '_DEFAULT_OPERATION';
 
   final scrollController = ScrollController();
@@ -134,7 +135,8 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     return newState;
   }
 
-  FailedOperationState<Output> failedOperation(String message, {String operationTag}) {
+  FailedOperationState<Output> failedOperation(String message,
+      {String operationTag}) {
     operationTag ??= DEFAULT_OPERATION;
     final newState = FailedOperationState(
       data: currentData,
