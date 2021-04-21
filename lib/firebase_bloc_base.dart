@@ -19,6 +19,8 @@ export 'src/domain/service/data_validator.dart';
 export 'src/presentation/bloc/base/base_converter_bloc.dart';
 export 'src/presentation/bloc/base/base_working_bloc.dart';
 export 'src/presentation/bloc/base/form_bloc.dart';
+export 'src/presentation/bloc/base/independent_converter_bloc.dart';
+export 'src/presentation/bloc/base/independent_converter_mixin.dart';
 export 'src/presentation/bloc/base/listing_bloc.dart';
 export 'src/presentation/bloc/base/single_bloc.dart';
 export 'src/presentation/bloc/base/working_state.dart';
