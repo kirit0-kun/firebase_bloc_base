@@ -15,7 +15,8 @@ mixin IndependentConverterMixin<Input, Output>
       return dataSource.fold(
         (failure) => Stream.value(BaseErrorState<Input>(failure.message)),
         (stream) => stream
-            .map((event) => BaseLoadedState<Input>(event))
+            .map<BaseProviderState<Input>>(
+                (event) => BaseLoadedState<Input>(event))
             .handleError((e, s) {
           String error;
           try {
@@ -24,7 +25,7 @@ mixin IndependentConverterMixin<Input, Output>
             error = this.anUnexpectedErrorOccurred;
           }
           return BaseErrorState<Input>(error);
-        }),
+        }).cast<BaseProviderState<Input>>(),
       );
     }
     return null;
@@ -33,15 +34,15 @@ mixin IndependentConverterMixin<Input, Output>
 
 mixin IndependentMultiConverterMixin<Input, Output>
     on MultiConverterBloc<Input, Output> {
-  Either<Failure, Stream<Input>> get dataSource;
+  Either<Failure, Stream> get dataSource;
 
   get sources {
-    Stream<BaseProviderState<Input>> source;
+    Stream<BaseProviderState> source;
     if (dataSource != null) {
       source = dataSource.fold(
-        (failure) => Stream.value(BaseErrorState<Input>(failure.message)),
+        (failure) => Stream.value(BaseErrorState(failure.message)),
         (stream) => stream
-            .map((event) => BaseLoadedState<Input>(event))
+            .map<BaseProviderState>((event) => BaseLoadedState(event))
             .handleError((e, s) {
           String error;
           try {
@@ -49,8 +50,8 @@ mixin IndependentMultiConverterMixin<Input, Output>
           } catch (_) {
             error = this.anUnexpectedErrorOccurred;
           }
-          return BaseErrorState<Input>(error);
-        }),
+          return BaseErrorState(error);
+        }).cast<BaseProviderState>(),
       );
     }
     return [if (source != null) source, ...super.sources];
