@@ -211,7 +211,7 @@ class FirebaseQuerySwitcher {
       {bool arrayContainsAny, bool whereIn}) {
     return moreThan10Stream(initial,
             arrayContainsAny: arrayContainsAny, whereIn: whereIn)
-        .map((list) => list.map((data) => transform(data.data())));
+        .map((list) => list.map((data) => transform(data.data())).toList());
   }
 
   static List<List> _split(List list) {
