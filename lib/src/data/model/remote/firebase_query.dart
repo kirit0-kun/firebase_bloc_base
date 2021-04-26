@@ -166,7 +166,7 @@ class FirebaseQuerySwitcher {
           .expand((element) => element)
           .toList();
     }
-    return newQueries;
+    return newQueries ?? [finalQuery];
   }
 
   Future<List<QueryDocumentSnapshot>> moreThan10Future(Query initial,
