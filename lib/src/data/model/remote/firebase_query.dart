@@ -123,6 +123,22 @@ class FirebaseQuerySwitcher {
     if (limit != null) {
       finalQuery = finalQuery.limit(limit);
     }
+    whereNotIn?.forEach((key, value) {
+      finalQuery = finalQuery.where(key, whereNotIn: value);
+    });
+    if (arrayContainsAny != true) {
+      this.arrayContainsAny?.forEach((key, value) {
+        finalQuery = finalQuery.where(key, arrayContainsAny: value);
+      });
+    }
+    if (whereIn != true) {
+      this.whereIn?.forEach((key, value) {
+        finalQuery = finalQuery.where(key, whereIn: value);
+      });
+    }
+    whereNotIn?.forEach((key, value) {
+      finalQuery = finalQuery.where(key, whereNotIn: value);
+    });
     List<Query> newQueries;
     if (arrayContainsAny == true && this.arrayContainsAny != null) {
       newQueries = this
@@ -136,7 +152,8 @@ class FirebaseQuerySwitcher {
           })
           .expand((element) => element)
           .toList();
-    } else if (whereIn == true && this.whereIn != null) {
+    }
+    if (whereIn == true && this.whereIn != null) {
       newQueries = this
           .whereIn
           .entries
