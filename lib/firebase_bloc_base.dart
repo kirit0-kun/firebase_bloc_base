@@ -16,6 +16,7 @@ export 'src/domain/entity/base_profile.dart';
 export 'src/domain/entity/grouped_item_header.dart';
 export 'src/domain/entity/response_entity.dart';
 export 'src/domain/service/data_validator.dart';
+export 'src/domain/service/executor.dart';
 export 'src/presentation/bloc/base/base_converter_bloc.dart';
 export 'src/presentation/bloc/base/base_working_bloc.dart';
 export 'src/presentation/bloc/base/form_bloc.dart';

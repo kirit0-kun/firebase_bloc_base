@@ -23,7 +23,7 @@ dependencies:
   path_provider: ^1.6.24
   flutter_secure_storage: ^3.3.5
   lazy_evaluation: ^0.0.6+3
-  worker_manager: ^3.1.6
+  worker_manager: ^3.3.1
   async: any
 
   firebase_core: "^0.7.0"
