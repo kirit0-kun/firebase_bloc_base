@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
+import 'package:rxdart/rxdart.dart';
 
 class FirebaseQuerySwitcher {
+  static const l = 10;
+
   const FirebaseQuerySwitcher({
     this.isEqualTo,
     this.isNotEqualTo,
@@ -81,5 +84,111 @@ class FirebaseQuerySwitcher {
       finalQuery = finalQuery.limit(limit);
     }
     return finalQuery;
+  }
+
+  List<Query> moreThan10(Query initial, {bool arrayContainsAny, bool whereIn}) {
+    Query finalQuery = initial;
+    isEqualTo?.forEach((key, value) {
+      finalQuery = finalQuery.where(key, isEqualTo: value);
+    });
+    isNotEqualTo?.forEach((key, value) {
+      finalQuery = finalQuery.where(key, isNotEqualTo: value);
+    });
+    isLessThan?.forEach((key, value) {
+      finalQuery = finalQuery.where(key, isLessThan: value);
+    });
+    isLessThanOrEqualTo?.forEach((key, value) {
+      finalQuery = finalQuery.where(key, isLessThanOrEqualTo: value);
+    });
+    isGreaterThan?.forEach((key, value) {
+      finalQuery = finalQuery.where(key, isGreaterThan: value);
+    });
+    isGreaterThanOrEqualTo?.forEach((key, value) {
+      finalQuery = finalQuery.where(key, isGreaterThanOrEqualTo: value);
+    });
+    arrayContains?.forEach((key, value) {
+      finalQuery = finalQuery.where(key, arrayContains: value);
+    });
+    isNull?.forEach((key, value) {
+      finalQuery = finalQuery.where(key, isNull: value);
+    });
+    orderBy?.forEach((element) {
+      final key = element.value1;
+      final descending = element.value2;
+      finalQuery = finalQuery.orderBy(key, descending: descending);
+    });
+    if (startAfter != null) {
+      finalQuery = finalQuery.startAfterDocument(startAfter);
+    }
+    if (limit != null) {
+      finalQuery = finalQuery.limit(limit);
+    }
+    List<Query> newQueries;
+    if (arrayContainsAny == true && this.arrayContainsAny != null) {
+      newQueries = this
+          .arrayContainsAny
+          .entries
+          .map((entry) {
+            return _split(entry.value)
+                .map((miniList) =>
+                    finalQuery.where(entry.key, arrayContainsAny: miniList))
+                .toList();
+          })
+          .expand((element) => element)
+          .toList();
+    } else if (whereIn == true && this.whereIn != null) {
+      newQueries = this
+          .whereIn
+          .entries
+          .map((entry) {
+            return _split(entry.value)
+                .map((miniList) =>
+                    finalQuery.where(entry.key, whereIn: miniList))
+                .toList();
+          })
+          .expand((element) => element)
+          .toList();
+    }
+    return newQueries;
+  }
+
+  Future<List<QueryDocumentSnapshot>> moreThan10Future(Query initial,
+      {bool arrayContainsAny, bool whereIn}) {
+    final futures = moreThan10(initial,
+            whereIn: whereIn, arrayContainsAny: arrayContainsAny)
+        .map((query) => query.get().then((value) => value?.docs));
+    return Future.wait(futures).then((value) => value
+        .where((element) => element != null)
+        .expand((element) => element)
+        .toList());
+  }
+
+  Stream<List<QueryDocumentSnapshot>> moreThan10Stream(Query initial,
+      {bool arrayContainsAny, bool whereIn}) {
+    final futures = moreThan10(initial,
+            whereIn: whereIn, arrayContainsAny: arrayContainsAny)
+        .map((query) =>
+            query.snapshots().defaultIfEmpty(null).map((value) => value?.docs))
+        .toList();
+    return CombineLatestStream<List<QueryDocumentSnapshot>,
+            List<QueryDocumentSnapshot>>(
+        futures,
+        (streams) => streams
+            .where((element) => element != null)
+            .expand((element) => element)
+            .toList());
+  }
+
+  static List<List> _split(List list) {
+    if (list.length <= l) {
+      return [list];
+    }
+    final List<List> result = [];
+    final rounds = (list.length / l).ceil();
+    for (int i = 0; i < rounds; i++) {
+      final newList = list.skip(l * i).take(l).toList();
+      result.add(newList);
+    }
+    return result;
   }
 }
