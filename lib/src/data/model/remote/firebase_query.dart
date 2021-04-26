@@ -177,6 +177,7 @@ class FirebaseQuerySwitcher {
     return Future.wait(futures).then((value) => value
         .where((element) => element != null)
         .expand((element) => element)
+        .where((element) => element.exists)
         .toList());
   }
 
@@ -193,7 +194,24 @@ class FirebaseQuerySwitcher {
         (streams) => streams
             .where((element) => element != null)
             .expand((element) => element)
+            .where((element) => element.exists)
             .toList());
+  }
+
+  Future<List<T>> moreThan10FutureTransform<T>(
+      Query initial, T Function(Map<String, dynamic>) transform,
+      {bool arrayContainsAny, bool whereIn}) {
+    return moreThan10Future(initial,
+            arrayContainsAny: arrayContainsAny, whereIn: whereIn)
+        .then((value) => value.map((data) => transform(data.data())).toList());
+  }
+
+  Stream<List<T>> moreThan10StreamTransform<T>(
+      Query initial, T Function(Map<String, dynamic>) transform,
+      {bool arrayContainsAny, bool whereIn}) {
+    return moreThan10Stream(initial,
+            arrayContainsAny: arrayContainsAny, whereIn: whereIn)
+        .map((list) => list.map((data) => transform(data.data())));
   }
 
   static List<List> _split(List list) {
