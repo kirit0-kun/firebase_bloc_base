@@ -26,6 +26,7 @@ export 'src/presentation/bloc/base/listing_bloc.dart';
 export 'src/presentation/bloc/base/single_bloc.dart';
 export 'src/presentation/bloc/base/working_state.dart';
 export 'src/presentation/bloc/base_provider/base_provider_bloc.dart';
+export 'src/presentation/bloc/base_provider/base_provider_dependant_provider.dart';
 export 'src/presentation/bloc/base_provider/base_user_dependant_provider.dart';
 export 'src/presentation/bloc/base_provider/lifecycle_observer.dart';
 export 'src/presentation/bloc/base_provider/provider_state.dart';
