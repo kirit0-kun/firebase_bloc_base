@@ -45,6 +45,10 @@ abstract class MultiConverterBloc<Input, Output>
             }
           },
         );
+    getData();
+  }
+
+  void getData() {
     if (sources?.isNotEmpty ?? false) {
       CombineLatestStream<BaseProviderState, List<BaseProviderState>>(
               sources, (a) => a)
@@ -161,6 +165,10 @@ abstract class BaseConverterBloc<Input, Output>
             emitError('An unexpected error occurred');
           }
         });
+    getData();
+  }
+
+  void getData() {
     source?.pipe(eventSink);
   }
 

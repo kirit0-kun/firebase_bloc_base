@@ -8,6 +8,7 @@ export 'working_state.dart';
 
 mixin IndependentConverterMixin<Input, Output>
     on BaseConverterBloc<Input, Output> {
+  bool get getDataWhenSourceChange => false;
   Either<Failure, Stream<Input>> get dataSource;
 
   Stream<BaseProviderState<Input>> get source {
