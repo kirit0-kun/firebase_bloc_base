@@ -25,7 +25,7 @@ abstract class IndependentConverterBloc<Input, Output>
       BaseProviderBloc<dynamic, Input> sourceBloc})
       : super(currentData: currentData, sourceBloc: sourceBloc) {
     if (getDataWhenSourceChange) {
-      _subscription = sourceBloc?.dataStream?.listen((event) {
+      _subscription = sourceBloc?.dataStream?.distinct()?.listen((event) {
         getData();
       });
     }
