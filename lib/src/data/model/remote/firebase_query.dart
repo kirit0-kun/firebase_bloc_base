@@ -214,6 +214,31 @@ class FirebaseQuerySwitcher {
         .map((list) => list.map((data) => transform(data.data())).toList());
   }
 
+  Future<List<T>> future<T>(
+      Query initial, T Function(Map<String, dynamic>) transform) async {
+    final future =
+        await applyToQuery(initial).get().then((value) => value?.docs);
+    if (future?.isNotEmpty == true) {
+      return future.map((item) => transform(item.data())).toList();
+    } else {
+      return [];
+    }
+  }
+
+  Stream<List<T>> stream<T>(
+      Query initial, T Function(Map<String, dynamic>) transform) {
+    return applyToQuery(initial)
+        .snapshots()
+        .map((value) => value?.docs)
+        .map((event) {
+      if (event?.isNotEmpty == true) {
+        return event.map((item) => transform(item.data())).toList();
+      } else {
+        return [];
+      }
+    });
+  }
+
   static List<List> _split(List list) {
     if (list.length <= l) {
       return [list];

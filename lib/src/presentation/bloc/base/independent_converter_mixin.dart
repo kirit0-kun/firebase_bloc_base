@@ -11,7 +11,7 @@ mixin IndependentConverterMixin<Input, Output>
   bool get getDataWhenSourceChange => false;
   Either<Failure, Stream<Input>> get dataSource;
 
-  Stream<BaseProviderState<Input>> get source {
+  get source {
     if (dataSource != null) {
       return dataSource.fold(
         (failure) => Stream.value(BaseErrorState<Input>(failure.message)),
