@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 import 'package:rxdart/rxdart.dart';
@@ -199,40 +201,48 @@ class FirebaseQuerySwitcher {
   }
 
   Future<List<T>> moreThan10FutureTransform<T>(
-      Query initial, T Function(Map<String, dynamic>) transform,
+      Query initial, FutureOr<T> Function(Map<String, dynamic>) transform,
       {bool arrayContainsAny, bool whereIn}) {
     return moreThan10Future(initial,
             arrayContainsAny: arrayContainsAny, whereIn: whereIn)
-        .then((value) => value.map((data) => transform(data.data())).toList());
+        .then((value) async {
+      final futures = value.map((data) async => await transform(data.data()));
+      return await Future.wait(futures);
+    });
   }
 
   Stream<List<T>> moreThan10StreamTransform<T>(
-      Query initial, T Function(Map<String, dynamic>) transform,
+      Query initial, FutureOr<T> Function(Map<String, dynamic>) transform,
       {bool arrayContainsAny, bool whereIn}) {
     return moreThan10Stream(initial,
             arrayContainsAny: arrayContainsAny, whereIn: whereIn)
-        .map((list) => list.map((data) => transform(data.data())).toList());
+        .asyncMap((list) async {
+      final futures = list.map((data) async => await transform(data.data()));
+      return await Future.wait(futures);
+    });
   }
 
-  Future<List<T>> future<T>(
-      Query initial, T Function(Map<String, dynamic>) transform) async {
+  Future<List<T>> future<T>(Query initial,
+      FutureOr<T> Function(Map<String, dynamic>) transform) async {
     final future =
         await applyToQuery(initial).get().then((value) => value?.docs);
     if (future?.isNotEmpty == true) {
-      return future.map((item) => transform(item.data())).toList();
+      final futures = future.map((item) async => await transform(item.data()));
+      return await Future.wait(futures);
     } else {
       return [];
     }
   }
 
   Stream<List<T>> stream<T>(
-      Query initial, T Function(Map<String, dynamic>) transform) {
+      Query initial, FutureOr<T> Function(Map<String, dynamic>) transform) {
     return applyToQuery(initial)
         .snapshots()
         .map((value) => value?.docs)
-        .map((event) {
+        .asyncMap((event) async {
       if (event?.isNotEmpty == true) {
-        return event.map((item) => transform(item.data())).toList();
+        final futures = event.map((item) async => await transform(item.data()));
+        return await Future.wait(futures);
       } else {
         return [];
       }
