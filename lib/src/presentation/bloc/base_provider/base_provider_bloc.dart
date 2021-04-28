@@ -83,6 +83,8 @@ abstract class BaseProviderBloc<Input, Output>
       }
       _dataFuture.complete(data);
     } else if (state is BaseErrorState<Output>) {
+      handleData(null);
+      mapData(null);
       dataSubject.addError(state);
       if (_dataFuture.isCompleted) {
         _dataFuture = Completer<Output>();
