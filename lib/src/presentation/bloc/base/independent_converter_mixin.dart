@@ -12,6 +12,7 @@ mixin IndependentConverterMixin<Input, Output>
   Either<Failure, Stream<Input>> get dataSource;
 
   get source {
+    final dataSource = this.dataSource;
     if (dataSource != null) {
       return dataSource.fold(
         (failure) => Stream.value(BaseErrorState<Input>(failure.message)),
@@ -39,6 +40,7 @@ mixin IndependentMultiConverterMixin<Input, Output>
 
   get sources {
     Stream<BaseProviderState> source;
+    final dataSource = this.dataSource;
     if (dataSource != null) {
       source = dataSource.fold(
         (failure) => Stream.value(BaseErrorState(failure.message)),
