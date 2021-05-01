@@ -245,6 +245,8 @@ abstract class BaseProviderBloc<Input, Output>
   void getData() {
     listening = true;
     final result = this.result;
+    final dataSource = this.dataSource;
+    final additionalSources = this.additionalSources;
     if (dataSource != null) {
       _handleOperation(dataSource);
     } else if (additionalSources.isNotEmpty) {
