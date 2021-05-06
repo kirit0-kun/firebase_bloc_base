@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:worker_manager/worker_manager.dart';
 
@@ -13,6 +14,7 @@ abstract class MultiConverterBloc<Input, Output>
   final debounceMilliseconds = Duration(milliseconds: 100);
 
   StreamSubscription subscription;
+  StreamSubscription sinkSubscription;
   Cancelable<Output> _cancelable;
 
   List<Stream<BaseProviderState>> get sources => [];
@@ -49,12 +51,29 @@ abstract class MultiConverterBloc<Input, Output>
   }
 
   void getData() {
+    final sources = this.sources;
     if (sources?.isNotEmpty ?? false) {
-      CombineLatestStream<BaseProviderState, List<BaseProviderState>>(
-              sources, (a) => a)
-          ?.asBroadcastStream(onCancel: (sub) => sub.cancel())
-          ?.pipe(eventSink);
+      sinkSubscription =
+          CombineLatestStream<BaseProviderState, List<BaseProviderState>>(
+                  sources, (a) => a)
+              ?.asBroadcastStream(onCancel: (sub) => sub.cancel())
+              ?.listen((event) => eventSink.add(event));
     }
+  }
+
+  void reload() {
+    getData();
+  }
+
+  void reset() async {
+    clean();
+    return getData();
+  }
+
+  @mustCallSuper
+  void refresh() async {
+    clean();
+    return reload();
   }
 
   Stream<List<BaseProviderState>> convertStream(
@@ -123,6 +142,7 @@ abstract class MultiConverterBloc<Input, Output>
   @override
   Future<void> close() {
     subscription?.cancel();
+    sinkSubscription?.cancel();
     _cancelable?.cancel();
     _eventsSubject.close();
     return super.close();
@@ -134,6 +154,7 @@ abstract class BaseConverterBloc<Input, Output>
   final debounceMilliseconds = Duration(milliseconds: 100);
 
   StreamSubscription subscription;
+  StreamSubscription sinkSubscription;
   Cancelable<Output> _cancelable;
 
   Stream<BaseProviderState<Input>> get source => sourceBloc?.stateStream;
@@ -169,11 +190,30 @@ abstract class BaseConverterBloc<Input, Output>
   }
 
   void getData() {
-    source?.pipe(eventSink);
+    final source = this.source;
+    if (source != null) {
+      sinkSubscription?.cancel();
+      sinkSubscription = source.listen((event) => eventSink.add(event));
+    }
   }
 
   void reload() {
-    sourceBloc?.getData();
+    if (sourceBloc == null) {
+      getData();
+    } else {
+      sourceBloc.getData();
+    }
+  }
+
+  void reset() async {
+    clean();
+    return getData();
+  }
+
+  @mustCallSuper
+  void refresh() async {
+    clean();
+    return reload();
   }
 
   Future<Output> convert(Input input);
@@ -201,7 +241,7 @@ abstract class BaseConverterBloc<Input, Output>
         final cancelable = _work(event.data);
         _cancelable = cancelable;
         final newData = await cancelable;
-        currentData = newData;
+        setData(newData);
         handleData(newData);
         emitLoaded();
       } catch (e, s) {
@@ -226,6 +266,7 @@ abstract class BaseConverterBloc<Input, Output>
   @override
   Future<void> close() {
     subscription?.cancel();
+    sinkSubscription?.cancel();
     _cancelable?.cancel();
     _eventsSubject.close();
     return super.close();
