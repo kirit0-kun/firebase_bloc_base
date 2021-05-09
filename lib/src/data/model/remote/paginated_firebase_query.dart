@@ -116,15 +116,15 @@ class PaginatedFirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
         );
 
   final PaginatedParam paginatedParam;
-  final Map<String, PaginatedWhereParam> arrayContainsAny;
-  final Map<String, PaginatedWhereParam> whereIn;
+  final List<MapEntry<String, PaginatedWhereParam>> arrayContainsAny;
+  final List<MapEntry<String, PaginatedWhereParam>> whereIn;
 
   List<QueryParamCombo> paginate(Query initial,
       {bool arrayContainsAny, bool whereIn}) {
     Query finalQuery = super.applyToQuery(initial);
     List<QueryParamCombo> newQueries;
     if (arrayContainsAny == true && this.arrayContainsAny != null) {
-      newQueries = this.arrayContainsAny.entries.map((item) {
+      newQueries = this.arrayContainsAny.map((item) {
         final key = item.key;
         final entry = item.value;
         var newQuery = finalQuery.where(key, arrayContainsAny: entry.values);
@@ -137,7 +137,7 @@ class PaginatedFirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
         return QueryParamCombo(newQuery, entry);
       }).toList();
     } else if (whereIn == true && this.whereIn != null) {
-      newQueries = this.whereIn.entries.map((item) {
+      newQueries = this.whereIn.map((item) {
         final key = item.key;
         final entry = item.value;
         var newQuery = finalQuery.where(key, whereIn: entry.values);
