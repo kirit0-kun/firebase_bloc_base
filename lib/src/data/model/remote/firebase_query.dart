@@ -17,7 +17,7 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
     Map<String, dynamic> isGreaterThan,
     Map<String, dynamic> isGreaterThanOrEqualTo,
     Map<String, dynamic> arrayContains,
-    List<MapEntry<String, bool>> orderBy,
+    Map<String, bool> orderBy,
     Map<String, bool> isNull,
     this.arrayContainsAny,
     this.whereIn,

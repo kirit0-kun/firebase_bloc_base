@@ -24,7 +24,7 @@ class BaseFirebaseQuerySwitcher {
   final Map<String, dynamic> isGreaterThan;
   final Map<String, dynamic> isGreaterThanOrEqualTo;
   final Map<String, dynamic> arrayContains;
-  final List<MapEntry<String, bool>> orderBy;
+  final Map<String, bool> orderBy;
   final Map<String, bool> isNull;
 
   Query applyToQuery(Query initial) {
@@ -53,7 +53,7 @@ class BaseFirebaseQuerySwitcher {
     isNull?.forEach((key, value) {
       finalQuery = finalQuery.where(key, isNull: value);
     });
-    orderBy?.forEach((element) {
+    orderBy?.entries?.forEach((element) {
       final key = element.key;
       final descending = element.value;
       finalQuery = finalQuery.orderBy(key, descending: descending);
