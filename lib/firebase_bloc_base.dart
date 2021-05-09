@@ -7,6 +7,7 @@ export 'package:firebase_storage/firebase_storage.dart';
 
 export 'src/data/model/remote/firebase_params.dart';
 export 'src/data/model/remote/firebase_query.dart';
+export 'src/data/model/remote/paginated_firebase_query.dart';
 export 'src/data/repository/firebase_repository.dart';
 export 'src/data/repository/user_repository.dart';
 export 'src/data/service/auth.dart';
