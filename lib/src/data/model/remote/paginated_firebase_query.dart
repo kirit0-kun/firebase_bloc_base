@@ -25,22 +25,18 @@ class Page<T> extends Equatable {
 }
 
 class PaginatedParam extends Equatable {
-  final String key;
   final List<dynamic> values;
   final DocumentSnapshot startAfter;
   final int count;
 
-  const PaginatedParam(this.key, this.values, {this.startAfter, this.count});
+  const PaginatedParam(this.values, {this.startAfter, this.count});
 
   @override
-  get props => [this.key, this.values, this.startAfter, this.count];
+  get props => [this.values, this.startAfter, this.count];
 
   PaginatedParam copyWith(
-          {String key,
-          List<dynamic> values,
-          DocumentSnapshot startAfter,
-          int count}) =>
-      PaginatedParam(key ?? this.key, values ?? this.values,
+          {List<dynamic> values, DocumentSnapshot startAfter, int count}) =>
+      PaginatedParam(values ?? this.values,
           startAfter: startAfter ?? this.startAfter,
           count: count ?? this.count);
 }
@@ -48,14 +44,14 @@ class PaginatedParam extends Equatable {
 class PaginatedResult<T> extends PaginatedParam {
   final List<T> result;
 
-  const PaginatedResult(this.result, String key, List values,
+  const PaginatedResult(this.result, List values,
       {DocumentSnapshot startAfter, int count})
-      : super(key, values, startAfter: startAfter, count: count);
+      : super(values, startAfter: startAfter, count: count);
 
-  factory PaginatedResult.fromParams(
-      List<T> result, PaginatedParam param, DocumentSnapshot startAfter) {
-    return PaginatedResult(result, param.key, param.values,
-        startAfter: startAfter, count: result.length);
+  factory PaginatedResult.fromParams(List<T> result, PaginatedParam param,
+      [DocumentSnapshot startAfter]) {
+    return PaginatedResult(result, param.values,
+        startAfter: startAfter ?? param.startAfter, count: result.length);
   }
 
   @override
@@ -66,12 +62,10 @@ class PaginatedResult<T> extends PaginatedParam {
 
   PaginatedResult copyWith(
           {List<T> result,
-          String key,
           List<dynamic> values,
           DocumentSnapshot startAfter,
           int count}) =>
-      PaginatedResult<T>(
-          result ?? this.result, key ?? this.key, values ?? this.values,
+      PaginatedResult<T>(result ?? this.result, values ?? this.values,
           startAfter: startAfter ?? this.startAfter,
           count: count ?? this.count);
 }
@@ -105,17 +99,18 @@ class PaginatedFirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
           isNull: isNull,
         );
 
-  final List<PaginatedParam> arrayContainsAny;
-  final List<PaginatedParam> whereIn;
+  final Map<String, PaginatedParam> arrayContainsAny;
+  final Map<String, PaginatedParam> whereIn;
 
   List<QueryParamCombo> paginate(Query initial,
       {bool arrayContainsAny, bool whereIn}) {
     Query finalQuery = super.applyToQuery(initial);
     List<QueryParamCombo> newQueries;
     if (arrayContainsAny == true && this.arrayContainsAny != null) {
-      newQueries = this.arrayContainsAny.map((entry) {
-        var newQuery =
-            finalQuery.where(entry.key, arrayContainsAny: entry.values);
+      newQueries = this.arrayContainsAny.entries.map((item) {
+        final key = item.key;
+        final entry = item.value;
+        var newQuery = finalQuery.where(key, arrayContainsAny: entry.values);
         if (entry.startAfter != null) {
           newQuery = newQuery.startAfterDocument(entry.startAfter);
         }
@@ -126,8 +121,10 @@ class PaginatedFirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
       }).toList();
     }
     if (whereIn == true && this.whereIn != null) {
-      newQueries = this.arrayContainsAny.map((entry) {
-        var newQuery = finalQuery.where(entry.key, whereIn: entry.values);
+      newQueries = this.whereIn.entries.map((item) {
+        final key = item.key;
+        final entry = item.value;
+        var newQuery = finalQuery.where(key, whereIn: entry.values);
         if (entry.startAfter != null) {
           newQuery = newQuery.startAfterDocument(entry.startAfter);
         }
@@ -150,7 +147,7 @@ class PaginatedFirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
         final futures =
             chunk.result.map((data) async => await transform(data.data()));
         final newResult = await Future.wait(futures);
-        return PaginatedResult.fromParams(newResult, chunk, chunk.startAfter);
+        return PaginatedResult.fromParams(newResult, chunk);
       });
       return Page(await Future.wait(chunksFuture));
     });
