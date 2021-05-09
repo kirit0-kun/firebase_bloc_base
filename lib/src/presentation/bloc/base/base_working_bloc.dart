@@ -38,7 +38,6 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     _statesSubject.add(state);
   }
 
-  @mustCallSuper
   void setData(Output newData) {
     currentData = newData;
     emitLoaded();

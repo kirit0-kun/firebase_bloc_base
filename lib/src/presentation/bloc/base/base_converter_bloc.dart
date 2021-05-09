@@ -14,6 +14,7 @@ abstract class BaseConverterBloc<Input, Output>
   final debounceMilliseconds = Duration(milliseconds: 100);
 
   StreamSubscription subscription;
+  StreamSubscription dataSubscription;
   StreamSubscription sinkSubscription;
   Cancelable<Output> _cancelable;
 
@@ -39,6 +40,11 @@ abstract class BaseConverterBloc<Input, Output>
   Stream<List<BaseProviderState>> get eventStream =>
       _eventsSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
 
+  final _dataSubject = StreamController<Output>();
+  StreamSink<Output> get dataSink => _dataSubject.sink;
+  Stream<Output> get dataStream =>
+      _dataSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
+
   BaseConverterBloc({this.sourceBloc, Output currentData})
       : super(currentData: currentData) {
     subscription = convertStream(eventStream)
@@ -63,6 +69,7 @@ abstract class BaseConverterBloc<Input, Output>
             }
           },
         );
+    dataSubscription = dataStream.listen(super.setData);
     getData();
   }
 
@@ -77,6 +84,10 @@ abstract class BaseConverterBloc<Input, Output>
   void getData() {
     sinkSubscription?.cancel();
     sinkSubscription = combinedSource?.listen((event) => eventSink.add(event));
+  }
+
+  void setData(Output newData) {
+    dataSink.add(newData);
   }
 
   void reload() {
@@ -133,9 +144,8 @@ abstract class BaseConverterBloc<Input, Output>
         final cancelable = _work(data);
         _cancelable = cancelable;
         final newData = await cancelable;
-        currentData = newData;
         handleData(newData);
-        emitLoaded();
+        setData(newData);
       } catch (e, s) {
         print(e);
         print(s);
@@ -161,9 +171,11 @@ abstract class BaseConverterBloc<Input, Output>
   @override
   Future<void> close() {
     subscription?.cancel();
+    dataSubscription?.cancel();
     sinkSubscription?.cancel();
     _cancelable?.cancel();
     _eventsSubject.close();
+    _dataSubject.close();
     return super.close();
   }
 }

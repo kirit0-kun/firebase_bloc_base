@@ -44,7 +44,15 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
     final newMap = Map.of(map);
     newMap[currentPage] = newData;
     paginatedData = PaginatedData(newMap, isThereMore, currentPage);
-    super.setData(newData);
+    if (currentData != null) {
+      super.setData(appendNew(newData, currentData));
+    } else {
+      super.setData(currentData);
+    }
+  }
+
+  Output appendNew(Output newData, Output currentData) {
+    return newData;
   }
 
   void getData();
