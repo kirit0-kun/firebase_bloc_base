@@ -33,30 +33,3 @@ mixin IndependentConverterMixin<Input, Output>
     return null;
   }
 }
-
-mixin IndependentMultiConverterMixin<Input, Output>
-    on MultiConverterBloc<Input, Output> {
-  Either<Failure, Stream> get dataSource;
-
-  get sources {
-    Stream<BaseProviderState> source;
-    final dataSource = this.dataSource;
-    if (dataSource != null) {
-      source = dataSource.fold(
-        (failure) => Stream.value(BaseErrorState(failure.message)),
-        (stream) => stream
-            .map<BaseProviderState>((event) => BaseLoadedState(event))
-            .handleError((e, s) {
-          String error;
-          try {
-            error = e.message;
-          } catch (_) {
-            error = this.anUnexpectedErrorOccurred;
-          }
-          return BaseErrorState(error);
-        }).cast<BaseProviderState>(),
-      );
-    }
-    return [if (source != null) source, ...super.sources];
-  }
-}

@@ -4,12 +4,6 @@ import '../../../../firebase_bloc_base.dart';
 
 export 'working_state.dart';
 
-abstract class PaginatedMultiConverterBloc<Input, Output>
-    extends MultiConverterBloc<Input, Output> with PaginatedMixin<Output> {
-  PaginatedMultiConverterBloc({Output currentData})
-      : super(currentData: currentData);
-}
-
 abstract class PaginatedConverterBloc<Input, Output>
     extends BaseConverterBloc<Input, Output> with PaginatedMixin<Output> {
   StreamSubscription _subscription;

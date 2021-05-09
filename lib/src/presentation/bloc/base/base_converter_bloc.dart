@@ -9,7 +9,7 @@ import 'base_working_bloc.dart';
 
 export 'working_state.dart';
 
-abstract class MultiConverterBloc<Input, Output>
+abstract class BaseConverterBloc<Input, Output>
     extends BaseWorkingBloc<Output> {
   final debounceMilliseconds = Duration(milliseconds: 100);
 
@@ -17,14 +17,30 @@ abstract class MultiConverterBloc<Input, Output>
   StreamSubscription sinkSubscription;
   Cancelable<Output> _cancelable;
 
-  List<Stream<BaseProviderState>> get sources => [];
+  Stream<BaseProviderState<Input>> get source => sourceBloc?.stateStream;
+
+  final BaseProviderBloc<dynamic, Input> sourceBloc;
+
+  List<Stream<BaseProviderState>> get additionalSources => null;
+
+  Stream<List<BaseProviderState>> get combinedSource {
+    final source = this.source;
+    final additionalSources = this.additionalSources;
+    List<Stream<BaseProviderState>> streams = [
+      if (source != null) source,
+      if (additionalSources?.isNotEmpty == true) ...additionalSources,
+    ];
+    return CombineLatestStream<BaseProviderState, List<BaseProviderState>>(
+        streams, (a) => a).asBroadcastStream(onCancel: (sub) => sub.cancel());
+  }
 
   final _eventsSubject = StreamController<List<BaseProviderState>>();
   StreamSink<List<BaseProviderState>> get eventSink => _eventsSubject.sink;
   Stream<List<BaseProviderState>> get eventStream =>
       _eventsSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
 
-  MultiConverterBloc({Output currentData}) : super(currentData: currentData) {
+  BaseConverterBloc({this.sourceBloc, Output currentData})
+      : super(currentData: currentData) {
     subscription = convertStream(eventStream)
         .doOnData((event) {
           emitLoading();
@@ -50,151 +66,17 @@ abstract class MultiConverterBloc<Input, Output>
     getData();
   }
 
-  void getData() {
-    final sources = this.sources;
-    if (sources?.isNotEmpty ?? false) {
-      sinkSubscription =
-          CombineLatestStream<BaseProviderState, List<BaseProviderState>>(
-                  sources, (a) => a)
-              ?.asBroadcastStream(onCancel: (sub) => sub.cancel())
-              ?.listen((event) => eventSink.add(event));
-    }
-  }
-
-  void reload() {
-    getData();
-  }
-
-  void reset() async {
-    clean();
-    return getData();
-  }
-
-  @mustCallSuper
-  void refresh() async {
-    clean();
-    return reload();
-  }
-
   Stream<List<BaseProviderState>> convertStream(
           Stream<List<BaseProviderState>> input) =>
       input;
-
-  Input combineSources(List<BaseLoadedState> events);
-
-  Future<Output> convert(Input input);
 
   bool shouldProcessEvents(List<BaseProviderState<dynamic>> event) {
     return true;
   }
 
-  Cancelable<Output> _work(Input input) {
-    final result = convert(input);
-    if (result is Cancelable<Output>) {
-      return result;
-    } else {
-      final completer = Completer<Output>();
-      completer.complete(result);
-      return Cancelable(completer, () {
-        // if (!completer.isCompleted) {
-        //   completer.completeError(CanceledError());
-        // }
-      });
-    }
-  }
-
-  void handleData(Output data) {}
-
-  void _handler(List<BaseProviderState> events) async {
-    _cancelable?.cancel();
-    _cancelable = null;
-    if (events.any((event) => event is BaseLoadingState)) {
-      emitLoading();
-    } else if (events.every((event) => event is BaseLoadedState)) {
-      try {
-        final data = combineSources(events.cast<BaseLoadedState>());
-        final cancelable = _work(data);
-        _cancelable = cancelable;
-        final newData = await cancelable;
-        currentData = newData;
-        handleData(newData);
-        emitLoaded();
-      } catch (e, s) {
-        print(e);
-        print(s);
-        print(this);
-        if (e is! CanceledError) {
-          try {
-            emitError(e.message);
-          } catch (_) {
-            emitError('An error occurred');
-          }
-        }
-      }
-    } else {
-      BaseErrorState errorState = events.firstWhere(
-          (element) => element is BaseErrorState,
-          orElse: () => null);
-      emitError(errorState?.message ?? 'An expected error occurred');
-    }
-  }
-
-  @override
-  Future<void> close() {
-    subscription?.cancel();
-    sinkSubscription?.cancel();
-    _cancelable?.cancel();
-    _eventsSubject.close();
-    return super.close();
-  }
-}
-
-abstract class BaseConverterBloc<Input, Output>
-    extends BaseWorkingBloc<Output> {
-  final debounceMilliseconds = Duration(milliseconds: 100);
-
-  StreamSubscription subscription;
-  StreamSubscription sinkSubscription;
-  Cancelable<Output> _cancelable;
-
-  Stream<BaseProviderState<Input>> get source => sourceBloc?.stateStream;
-
-  final BaseProviderBloc<dynamic, Input> sourceBloc;
-
-  final _eventsSubject = StreamController<BaseProviderState<Input>>();
-  StreamSink<BaseProviderState<Input>> get eventSink => _eventsSubject.sink;
-  Stream<BaseProviderState<Input>> get eventStream =>
-      _eventsSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
-
-  BaseConverterBloc({this.sourceBloc, Output currentData})
-      : super(currentData: currentData) {
-    subscription = eventStream
-        .doOnData((event) {
-          emitLoading();
-          _cancelable?.cancel();
-          _cancelable = null;
-        })
-        .throttleTime(debounceMilliseconds, trailing: true)
-        .listen(_handler, onError: (e, s) {
-          print(e);
-          print(s);
-          print(this);
-          print(sourceBloc?.state);
-          try {
-            emitError(e.message);
-          } catch (_) {
-            emitError('An unexpected error occurred');
-          }
-        });
-    getData();
-  }
-
   void getData() {
-    final source = this.source;
-    if (source != null) {
-      sinkSubscription?.cancel();
-      sinkSubscription = source.listen((event) => eventSink.add(event));
-    }
+    sinkSubscription?.cancel();
+    sinkSubscription = combinedSource?.listen((event) => eventSink.add(event));
   }
 
   void reload() {
@@ -233,15 +115,25 @@ abstract class BaseConverterBloc<Input, Output>
     }
   }
 
-  void _handler(BaseProviderState event) async {
-    if (event is BaseLoadingState<Input>) {
+  Input combineSources(List<BaseLoadedState> events) {
+    final dataEvent = events.firstWhere(
+        (element) => element is BaseLoadedState<Input>,
+        orElse: () => null);
+    return dataEvent?.data;
+  }
+
+  void _handler(List<BaseProviderState> events) async {
+    _cancelable?.cancel();
+    _cancelable = null;
+    if (events.any((event) => event is BaseLoadingState)) {
       emitLoading();
-    } else if (event is BaseLoadedState<Input>) {
+    } else if (events.every((event) => event is BaseLoadedState)) {
       try {
-        final cancelable = _work(event.data);
+        final data = combineSources(events.cast<BaseLoadedState>());
+        final cancelable = _work(data);
         _cancelable = cancelable;
         final newData = await cancelable;
-        setData(newData);
+        currentData = newData;
         handleData(newData);
         emitLoaded();
       } catch (e, s) {
@@ -256,8 +148,11 @@ abstract class BaseConverterBloc<Input, Output>
           }
         }
       }
-    } else if (event is BaseErrorState<Input>) {
-      emitError(event.message);
+    } else {
+      BaseErrorState errorState = events.firstWhere(
+          (element) => element is BaseErrorState,
+          orElse: () => null);
+      emitError(errorState?.message ?? 'An expected error occurred');
     }
   }
 
