@@ -1,67 +1,48 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dartz/dartz.dart';
 import 'package:rxdart/rxdart.dart';
 
-class FirebaseQuerySwitcher {
+import 'base_firebase_query.dart';
+
+class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
   static const l = 10;
 
   const FirebaseQuerySwitcher({
-    this.isEqualTo,
-    this.isNotEqualTo,
-    this.isLessThan,
-    this.isLessThanOrEqualTo,
-    this.isGreaterThan,
-    this.isGreaterThanOrEqualTo,
-    this.arrayContains,
+    int limit,
+    Map<String, dynamic> isEqualTo,
+    Map<String, dynamic> isNotEqualTo,
+    Map<String, dynamic> isLessThan,
+    Map<String, dynamic> isLessThanOrEqualTo,
+    Map<String, dynamic> isGreaterThan,
+    Map<String, dynamic> isGreaterThanOrEqualTo,
+    Map<String, dynamic> arrayContains,
+    List<MapEntry<String, bool>> orderBy,
+    Map<String, bool> isNull,
     this.arrayContainsAny,
     this.whereIn,
     this.whereNotIn,
-    this.orderBy,
-    this.isNull,
-    this.limit,
     this.startAfter,
-  });
+  }) : super(
+          limit: limit,
+          isEqualTo: isEqualTo,
+          isNotEqualTo: isNotEqualTo,
+          isLessThan: isLessThan,
+          isLessThanOrEqualTo: isLessThanOrEqualTo,
+          isGreaterThan: isGreaterThan,
+          isGreaterThanOrEqualTo: isGreaterThanOrEqualTo,
+          arrayContains: arrayContains,
+          orderBy: orderBy,
+          isNull: isNull,
+        );
 
-  final int limit;
-  final Map<String, dynamic> isEqualTo;
-  final Map<String, dynamic> isNotEqualTo;
-  final Map<String, dynamic> isLessThan;
-  final Map<String, dynamic> isLessThanOrEqualTo;
-  final Map<String, dynamic> isGreaterThan;
-  final Map<String, dynamic> isGreaterThanOrEqualTo;
-  final Map<String, dynamic> arrayContains;
   final Map<String, List<dynamic>> arrayContainsAny;
   final Map<String, List<dynamic>> whereIn;
   final Map<String, List<dynamic>> whereNotIn;
-  final List<Tuple2<String, bool>> orderBy;
-  final Map<String, bool> isNull;
   final DocumentSnapshot startAfter;
 
   Query applyToQuery(Query initial) {
-    Query finalQuery = initial;
-    isEqualTo?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isEqualTo: value);
-    });
-    isNotEqualTo?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isNotEqualTo: value);
-    });
-    isLessThan?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isLessThan: value);
-    });
-    isLessThanOrEqualTo?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isLessThanOrEqualTo: value);
-    });
-    isGreaterThan?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isGreaterThan: value);
-    });
-    isGreaterThanOrEqualTo?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isGreaterThanOrEqualTo: value);
-    });
-    arrayContains?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, arrayContains: value);
-    });
+    Query finalQuery = super.applyToQuery(initial);
     arrayContainsAny?.forEach((key, value) {
       finalQuery = finalQuery.where(key, arrayContainsAny: value);
     });
@@ -71,59 +52,16 @@ class FirebaseQuerySwitcher {
     whereNotIn?.forEach((key, value) {
       finalQuery = finalQuery.where(key, whereNotIn: value);
     });
-    isNull?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isNull: value);
-    });
-    orderBy?.forEach((element) {
-      final key = element.value1;
-      final descending = element.value2;
-      finalQuery = finalQuery.orderBy(key, descending: descending);
-    });
     if (startAfter != null) {
       finalQuery = finalQuery.startAfterDocument(startAfter);
-    }
-    if (limit != null) {
-      finalQuery = finalQuery.limit(limit);
     }
     return finalQuery;
   }
 
   List<Query> moreThan10(Query initial, {bool arrayContainsAny, bool whereIn}) {
-    Query finalQuery = initial;
-    isEqualTo?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isEqualTo: value);
-    });
-    isNotEqualTo?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isNotEqualTo: value);
-    });
-    isLessThan?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isLessThan: value);
-    });
-    isLessThanOrEqualTo?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isLessThanOrEqualTo: value);
-    });
-    isGreaterThan?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isGreaterThan: value);
-    });
-    isGreaterThanOrEqualTo?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isGreaterThanOrEqualTo: value);
-    });
-    arrayContains?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, arrayContains: value);
-    });
-    isNull?.forEach((key, value) {
-      finalQuery = finalQuery.where(key, isNull: value);
-    });
-    orderBy?.forEach((element) {
-      final key = element.value1;
-      final descending = element.value2;
-      finalQuery = finalQuery.orderBy(key, descending: descending);
-    });
+    Query finalQuery = super.applyToQuery(initial);
     if (startAfter != null) {
       finalQuery = finalQuery.startAfterDocument(startAfter);
-    }
-    if (limit != null) {
-      finalQuery = finalQuery.limit(limit);
     }
     whereNotIn?.forEach((key, value) {
       finalQuery = finalQuery.where(key, whereNotIn: value);
@@ -176,11 +114,23 @@ class FirebaseQuerySwitcher {
     final futures = moreThan10(initial,
             whereIn: whereIn, arrayContainsAny: arrayContainsAny)
         .map((query) => query.get().then((value) => value?.docs));
-    return Future.wait(futures).then((value) => value
-        .where((element) => element != null)
-        .expand((element) => element)
-        .where((element) => element.exists)
-        .toList());
+    return Future.wait(futures).then((value) {
+      final entries = value
+          .where((element) => element != null)
+          .expand((element) => element)
+          .where((element) => element.exists)
+          .toList();
+      final emitted = <String>{};
+      final toEmit = <QueryDocumentSnapshot>[];
+      entries.forEach((element) {
+        final path = element.reference.path;
+        if (!emitted.contains(path)) {
+          toEmit.add(element);
+          emitted.add(path);
+        }
+      });
+      return toEmit;
+    });
   }
 
   Stream<List<QueryDocumentSnapshot>> moreThan10Stream(Query initial,
@@ -191,13 +141,23 @@ class FirebaseQuerySwitcher {
             query.snapshots().defaultIfEmpty(null).map((value) => value?.docs))
         .toList();
     return CombineLatestStream<List<QueryDocumentSnapshot>,
-            List<QueryDocumentSnapshot>>(
-        futures,
-        (streams) => streams
-            .where((element) => element != null)
-            .expand((element) => element)
-            .where((element) => element.exists)
-            .toList());
+        List<QueryDocumentSnapshot>>(futures, (streams) {
+      final entries = streams
+          .where((element) => element != null)
+          .expand((element) => element)
+          .where((element) => element.exists)
+          .toList();
+      final emitted = <String>{};
+      final toEmit = <QueryDocumentSnapshot>[];
+      entries.forEach((element) {
+        final path = element.reference.path;
+        if (!emitted.contains(path)) {
+          toEmit.add(element);
+          emitted.add(path);
+        }
+      });
+      return toEmit;
+    });
   }
 
   Future<List<T>> moreThan10FutureTransform<T>(
@@ -219,33 +179,6 @@ class FirebaseQuerySwitcher {
         .asyncMap((list) async {
       final futures = list.map((data) async => await transform(data.data()));
       return await Future.wait(futures);
-    });
-  }
-
-  Future<List<T>> future<T>(Query initial,
-      FutureOr<T> Function(Map<String, dynamic>) transform) async {
-    final future =
-        await applyToQuery(initial).get().then((value) => value?.docs);
-    if (future?.isNotEmpty == true) {
-      final futures = future.map((item) async => await transform(item.data()));
-      return await Future.wait(futures);
-    } else {
-      return [];
-    }
-  }
-
-  Stream<List<T>> stream<T>(
-      Query initial, FutureOr<T> Function(Map<String, dynamic>) transform) {
-    return applyToQuery(initial)
-        .snapshots()
-        .map((value) => value?.docs)
-        .asyncMap((event) async {
-      if (event?.isNotEmpty == true) {
-        final futures = event.map((item) async => await transform(item.data()));
-        return await Future.wait(futures);
-      } else {
-        return [];
-      }
     });
   }
 
