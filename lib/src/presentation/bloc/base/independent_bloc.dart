@@ -8,7 +8,7 @@ export 'working_state.dart';
 
 abstract class IndependentConverterBloc<Input, Output>
     extends BaseConverterBloc<Input, Output>
-    with IndependentConverterMixin<Input, Output> {
+    with IndependentMixin<Input, Output> {
   StreamSubscription _subscription;
   final bool getDataWhenSourceChange;
 

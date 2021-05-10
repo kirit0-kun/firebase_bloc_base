@@ -6,7 +6,7 @@ import '../../../../firebase_bloc_base.dart';
 
 export 'working_state.dart';
 
-mixin IndependentConverterMixin<Input, Output>
+mixin IndependentMixin<Input, Output>
     on BaseConverterBloc<Input, Output> {
   bool get getDataWhenSourceChange => false;
   Either<Failure, Stream<Input>> get dataSource;
