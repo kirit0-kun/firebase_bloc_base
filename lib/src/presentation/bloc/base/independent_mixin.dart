@@ -16,21 +16,23 @@ mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output> {
   get source {
     final dataSource = this.dataSourceStream;
     if (dataSource != null) {
-      return dataSource.fold(
-        (failure) => Stream.value(BaseErrorState<Input>(failure.message)),
-        (stream) => stream
-            .map<BaseProviderState<Input>>(
-                (event) => BaseLoadedState<Input>(event))
-            .handleError((e, s) {
-          String error;
-          try {
-            error = e.message;
-          } catch (_) {
-            error = this.anUnexpectedErrorOccurred;
-          }
-          return BaseErrorState<Input>(error);
-        }).cast<BaseProviderState<Input>>(),
-      ).startWith(BaseLoadingState<Input>());
+      return dataSource
+          .fold(
+            (failure) => Stream.value(BaseErrorState<Input>(failure.message)),
+            (stream) => stream
+                .map<BaseProviderState<Input>>(
+                    (event) => BaseLoadedState<Input>(event))
+                .handleError((e, s) {
+              String error;
+              try {
+                error = e.message;
+              } catch (_) {
+                error = this.anUnexpectedErrorOccurred;
+              }
+              return BaseErrorState<Input>(error);
+            }).cast<BaseProviderState<Input>>(),
+          )
+          .startWith(BaseLoadingState<Input>());
     }
     final dataSourceFuture = this.dataSourceFuture;
     if (dataSourceFuture != null) {
