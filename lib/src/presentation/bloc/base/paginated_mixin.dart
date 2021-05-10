@@ -93,6 +93,7 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
     }
   }
 
+  @override
   void clean() {
     super.clean();
     _currentPage = startPage;
