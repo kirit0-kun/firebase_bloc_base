@@ -30,7 +30,7 @@ mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output> {
           }
           return BaseErrorState<Input>(error);
         }).cast<BaseProviderState<Input>>(),
-      );
+      ).startWith(BaseLoadingState<Input>());
     }
     final dataSourceFuture = this.dataSourceFuture;
     if (dataSourceFuture != null) {
