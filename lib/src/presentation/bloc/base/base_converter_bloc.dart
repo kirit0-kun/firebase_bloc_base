@@ -45,7 +45,8 @@ abstract class BaseConverterBloc<Input, Output>
   Stream<Output> get dataStream =>
       _dataSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
 
-  BaseConverterBloc({this.sourceBloc, Output currentData})
+  BaseConverterBloc(
+      {this.sourceBloc, Output currentData, bool getOnCreate = true})
       : super(currentData: currentData) {
     subscription = convertStream(eventStream)
         .doOnData((event) {
@@ -70,7 +71,9 @@ abstract class BaseConverterBloc<Input, Output>
           },
         );
     dataSubscription = dataStream.listen(super.setData);
-    getData();
+    if (getOnCreate) {
+      getData();
+    }
   }
 
   Stream<List<BaseProviderState>> convertStream(
