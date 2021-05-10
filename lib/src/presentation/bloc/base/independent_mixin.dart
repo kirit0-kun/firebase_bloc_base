@@ -6,13 +6,19 @@ import '../../../../firebase_bloc_base.dart';
 
 export 'working_state.dart';
 
-mixin IndependentMixin<Input, Output>
-    on BaseConverterBloc<Input, Output> {
+mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output> {
   bool get getDataWhenSourceChange => false;
-  Either<Failure, Stream<Input>> get dataSource;
+
+  Either<Failure, Stream<Input>> get dataSourceStream => null;
+  Either<Failure, Future<Input>> get dataSourceFuture => null;
 
   get source {
-    final dataSource = this.dataSource;
+    Either<Failure, Stream<Input>> dataSource;
+    dataSource = this.dataSourceStream;
+    final dataSourceFuture = this.dataSourceFuture;
+    if (dataSource == null) {
+      dataSource = dataSourceFuture?.map((r) => r.asStream());
+    }
     if (dataSource != null) {
       return dataSource.fold(
         (failure) => Stream.value(BaseErrorState<Input>(failure.message)),
