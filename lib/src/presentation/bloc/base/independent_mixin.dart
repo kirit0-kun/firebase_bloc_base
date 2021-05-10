@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
+import 'package:rxdart/rxdart.dart';
 
 import '../../../../firebase_bloc_base.dart';
 
@@ -10,15 +11,10 @@ mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output> {
   bool get getDataWhenSourceChange => false;
 
   Either<Failure, Stream<Input>> get dataSourceStream => null;
-  Either<Failure, Future<Input>> get dataSourceFuture => null;
+  Future<Either<Failure, Input>> get dataSourceFuture => null;
 
   get source {
-    Either<Failure, Stream<Input>> dataSource;
-    dataSource = this.dataSourceStream;
-    final dataSourceFuture = this.dataSourceFuture;
-    if (dataSource == null) {
-      dataSource = dataSourceFuture?.map((r) => r.asStream());
-    }
+    final dataSource = this.dataSourceStream;
     if (dataSource != null) {
       return dataSource.fold(
         (failure) => Stream.value(BaseErrorState<Input>(failure.message)),
@@ -35,6 +31,15 @@ mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output> {
           return BaseErrorState<Input>(error);
         }).cast<BaseProviderState<Input>>(),
       );
+    }
+    final dataSourceFuture = this.dataSourceFuture;
+    if (dataSourceFuture != null) {
+      return dataSourceFuture.asStream().map((event) {
+        return event.fold(
+          (failure) => BaseErrorState<Input>(failure.message),
+          (input) => BaseLoadedState<Input>(input),
+        );
+      }).startWith(BaseLoadingState<Input>());
     }
     return null;
   }
