@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:firebase_bloc_base/src/presentation/bloc/base/independent_converter_mixin.dart';
+import 'package:firebase_bloc_base/src/presentation/bloc/base/independent_mixin.dart';
 
 import '../../../../firebase_bloc_base.dart';
 

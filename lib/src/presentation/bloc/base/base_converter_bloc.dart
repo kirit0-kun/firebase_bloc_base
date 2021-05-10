@@ -144,6 +144,7 @@ abstract class BaseConverterBloc<Input, Output>
         final cancelable = _work(data);
         _cancelable = cancelable;
         final newData = await cancelable;
+        handleInput(data);
         handleData(newData);
         setData(newData);
       } catch (e, s) {
@@ -166,6 +167,7 @@ abstract class BaseConverterBloc<Input, Output>
     }
   }
 
+  void handleInput(Input data) {}
   void handleData(Output data) {}
 
   @override
