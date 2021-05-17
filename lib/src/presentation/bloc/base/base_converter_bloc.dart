@@ -35,12 +35,12 @@ abstract class BaseConverterBloc<Input, Output>
         streams, (a) => a).asBroadcastStream(onCancel: (sub) => sub.cancel());
   }
 
-  final _eventsSubject = StreamController<List<BaseProviderState>>();
+  final _eventsSubject = StreamController<List<BaseProviderState>>.broadcast();
   StreamSink<List<BaseProviderState>> get eventSink => _eventsSubject.sink;
   Stream<List<BaseProviderState>> get eventStream =>
       _eventsSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
 
-  final _dataSubject = StreamController<Output>();
+  final _dataSubject = StreamController<Output>.broadcast();
   StreamSink<Output> get dataSink => _dataSubject.sink;
   Stream<Output> get dataStream =>
       _dataSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
