@@ -183,8 +183,7 @@ class PaginatedFirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
     final futures =
         paginate(initial, whereIn: whereIn, arrayContainsAny: arrayContainsAny)
             .map((combo) => combo.query.get().then((value) =>
-                PaginatedResult.fromParams(value.docs, combo.param
-                    .copyWith(startAfter: value.docs.isEmpty ? null : value.docs.last),
+                PaginatedResult.fromParams(value.docs, combo.param,
                     value.docs.isEmpty ? null : value.docs.last)));
     return Future.wait(futures).then((value) {
       final list = value.where((element) => element != null).toList();
