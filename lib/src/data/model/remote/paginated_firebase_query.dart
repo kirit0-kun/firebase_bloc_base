@@ -172,7 +172,7 @@ class PaginatedFirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
         final futures =
             chunk.result.map((data) async => await transform(data.data()));
         final newResult = await Future.wait(futures);
-        return PaginatedResult.fromParams(newResult, chunk.param);
+        return PaginatedResult.fromParams(newResult, chunk.param, chunk.startAfter);
       });
       return Page(await Future.wait(chunksFuture));
     });
