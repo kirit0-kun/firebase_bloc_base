@@ -172,7 +172,7 @@ class PaginatedFirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
         final futures =
             chunk.result.map((data) async => await transform(data.data()));
         final newResult = await Future.wait(futures);
-        return PaginatedResult.fromParams(newResult, chunk);
+        return PaginatedResult.fromParams(newResult, chunk.param);
       });
       return Page(await Future.wait(chunksFuture));
     });
@@ -183,7 +183,8 @@ class PaginatedFirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
     final futures =
         paginate(initial, whereIn: whereIn, arrayContainsAny: arrayContainsAny)
             .map((combo) => combo.query.get().then((value) =>
-                PaginatedResult.fromParams(value.docs, combo.param,
+                PaginatedResult.fromParams(value.docs, combo.param
+                    .copyWith(startAfter: value.docs.isEmpty ? null : value.docs.last),
                     value.docs.isEmpty ? null : value.docs.last)));
     return Future.wait(futures).then((value) {
       final list = value.where((element) => element != null).toList();

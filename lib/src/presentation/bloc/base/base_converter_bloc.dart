@@ -38,12 +38,12 @@ abstract class BaseConverterBloc<Input, Output>
   final _eventsSubject = StreamController<List<BaseProviderState>>.broadcast();
   StreamSink<List<BaseProviderState>> get eventSink => _eventsSubject.sink;
   Stream<List<BaseProviderState>> get eventStream =>
-      _eventsSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
+      _eventsSubject.stream;
 
   final _dataSubject = StreamController<Output>.broadcast();
   StreamSink<Output> get dataSink => _dataSubject.sink;
   Stream<Output> get dataStream =>
-      _dataSubject.stream.asBroadcastStream(onCancel: (sub) => sub.cancel());
+      _dataSubject.stream.shareValueSeeded(currentData);
 
   BaseConverterBloc(
       {this.sourceBloc, Output currentData, bool getOnCreate = true})
@@ -94,6 +94,7 @@ abstract class BaseConverterBloc<Input, Output>
   }
 
   void reload() {
+    clean();
     if (sourceBloc == null) {
       getData();
     } else {

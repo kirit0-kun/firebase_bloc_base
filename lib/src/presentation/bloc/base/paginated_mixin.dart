@@ -33,7 +33,12 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
   bool get canGoForward => currentPage < lastPage || isThereMore;
   bool get isThereMore => paginatedData?.isThereMore ?? true;
 
+  set currentPage(int newPage) {
+    _currentPage = newPage;
+  }
+
   PaginatedData<Output> paginatedData;
+
   Stream<PaginatedData<Output>> get paginatedStream => async.LazyStream(
       () => stateStream.map((event) => paginatedData).distinct());
 
@@ -72,8 +77,8 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
 
   void next() async {
     if (canGoForward) {
-      _currentPage++;
-      final nextData = paginatedData?.data[_currentPage];
+      currentPage++;
+      final nextData = paginatedData?.data[currentPage];
       if (nextData != null) {
         setData(nextData);
       }
@@ -83,8 +88,8 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
 
   void back() async {
     if (canGoBack) {
-      _currentPage--;
-      final previousData = paginatedData.data[_currentPage];
+      currentPage--;
+      final previousData = paginatedData?.data[currentPage];
       setData(previousData);
     }
   }
@@ -99,9 +104,9 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
   @override
   void emitError(String message) {
     if (currentPage != startPage) {
-      _currentPage--;
+      currentPage--;
     } else {
-      _currentPage = null;
+      currentPage = null;
     }
     if (currentData == null) {
       super.emitError(message);
