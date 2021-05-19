@@ -12,7 +12,7 @@ abstract class BaseDependantProvider<Input, Output>
 
   BaseDependantProvider(this.source, LifecycleObserver observer)
       : super(getOnCreate: false, observer: observer) {
-    _subscription = source.distinct().listen((event) {
+    _subscription = source?.distinct()?.listen((event) {
       getData();
     });
   }

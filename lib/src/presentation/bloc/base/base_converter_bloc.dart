@@ -43,7 +43,7 @@ abstract class BaseConverterBloc<Input, Output>
   final _dataSubject = StreamController<Output>.broadcast();
   StreamSink<Output> get dataSink => _dataSubject.sink;
   Stream<Output> get dataStream =>
-      _dataSubject.stream.shareValueSeeded(currentData);
+      _dataSubject.stream;
 
   BaseConverterBloc(
       {this.sourceBloc, Output currentData, bool getOnCreate = true})
