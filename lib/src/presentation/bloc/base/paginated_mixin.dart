@@ -46,7 +46,7 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
   void setData(Output newData) {
     final map = paginatedData?.data ?? <int, Output>{};
     final newMap = Map.of(map);
-    final isThereMore = currentPage == newMap.length ? canGetMore(newData) : this.isThereMore;
+    final isThereMore = currentPage > newMap.length ? canGetMore(newData) : this.isThereMore;
     newMap[currentPage] = newData;
     paginatedData = PaginatedData(newMap, isThereMore, currentPage);
     super.setData(selectData(paginatedData));
