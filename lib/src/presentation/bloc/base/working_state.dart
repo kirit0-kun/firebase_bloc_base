@@ -65,7 +65,9 @@ class OnGoingOperationState<T> extends LoadedState<T>
       [...super.props, this.operationTag, this.loadingMessage];
 }
 
-class FailedOperationState<T> extends LoadedState<T> with Operation implements Error {
+class FailedOperationState<T> extends LoadedState<T>
+    with Operation
+    implements Error {
   final String operationTag;
   final String message;
 
@@ -73,8 +75,7 @@ class FailedOperationState<T> extends LoadedState<T> with Operation implements E
       : super(data);
 
   @override
-  List<Object> get props =>
-      [...super.props, this.operationTag, this.message];
+  List<Object> get props => [...super.props, this.operationTag, this.message];
 }
 
 class SuccessfulOperationState<T, S> extends LoadedState<T> with Operation {

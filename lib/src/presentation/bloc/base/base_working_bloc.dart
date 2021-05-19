@@ -149,7 +149,7 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     operationTag ??= DEFAULT_OPERATION;
     final newState = FailedOperationState(
       data: currentData,
-      errorMessage: message,
+      message: message,
       operationTag: operationTag,
     );
     emit(newState);
