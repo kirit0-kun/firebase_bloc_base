@@ -17,57 +17,41 @@ class BaseFirebaseQuerySwitcher {
   });
 
   final int limit;
-  final List<MapEntry<String, dynamic>> isEqualTo;
-  final List<MapEntry<String, dynamic>> isNotEqualTo;
-  final List<MapEntry<String, dynamic>> isLessThan;
-  final List<MapEntry<String, dynamic>> isLessThanOrEqualTo;
-  final List<MapEntry<String, dynamic>> isGreaterThan;
-  final List<MapEntry<String, dynamic>> isGreaterThanOrEqualTo;
-  final List<MapEntry<String, dynamic>> arrayContains;
+  final Map<String, dynamic> isEqualTo;
+  final Map<String, dynamic> isNotEqualTo;
+  final Map<String, dynamic> isLessThan;
+  final Map<String, dynamic> isLessThanOrEqualTo;
+  final Map<String, dynamic> isGreaterThan;
+  final Map<String, dynamic> isGreaterThanOrEqualTo;
+  final Map<String, dynamic> arrayContains;
   final List<MapEntry<String, bool>> orderBy;
   final List<MapEntry<String, bool>> isNull;
 
   Query applyToQuery(Query initial) {
     Query finalQuery = initial;
-    isEqualTo?.forEach((item) {
-      final key = item.key;
-      final value = item.value;
+    isEqualTo?.forEach((key, value) {
       finalQuery = finalQuery.where(key, isEqualTo: value);
     });
-    isNotEqualTo?.forEach((item) {
-      final key = item.key;
-      final value = item.value;
+    isNotEqualTo?.forEach((key, value) {
       finalQuery = finalQuery.where(key, isNotEqualTo: value);
     });
-    isLessThan?.forEach((item) {
-      final key = item.key;
-      final value = item.value;
+    isLessThan?.forEach((key, value) {
       finalQuery = finalQuery.where(key, isLessThan: value);
     });
-    isLessThanOrEqualTo?.forEach((item) {
-      final key = item.key;
-      final value = item.value;
+    isLessThanOrEqualTo?.forEach((key, value) {
       finalQuery = finalQuery.where(key, isLessThanOrEqualTo: value);
     });
-    isGreaterThan?.forEach((item) {
-      final key = item.key;
-      final value = item.value;
+    isGreaterThan?.forEach((key, value) {
       finalQuery = finalQuery.where(key, isGreaterThan: value);
     });
-    isGreaterThanOrEqualTo?.forEach((item) {
-      final key = item.key;
-      final value = item.value;
+    isGreaterThanOrEqualTo?.forEach((key, value) {
       finalQuery = finalQuery.where(key, isGreaterThanOrEqualTo: value);
     });
-    arrayContains?.forEach((item) {
-      final key = item.key;
-      final value = item.value;
+    arrayContains?.forEach((key, value) {
       finalQuery = finalQuery.where(key, arrayContains: value);
     });
     isNull?.forEach((item) {
-      final key = item.key;
-      final value = item.value;
-      finalQuery = finalQuery.where(key, isNull: value);
+      finalQuery = finalQuery.where(item.key, isNull: item.value);
     });
     orderBy?.forEach((element) {
       final key = element.key;
