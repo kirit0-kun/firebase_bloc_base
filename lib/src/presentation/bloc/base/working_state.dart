@@ -10,9 +10,13 @@ abstract class BlocState<T> extends Equatable {
   List<Object> get props => [];
 }
 
+abstract class Error {
+  String get message;
+}
+
 class LoadingState<T> extends BlocState<T> {}
 
-class ErrorState<T> extends BlocState<T> {
+class ErrorState<T> extends BlocState<T> implements Error {
   final String message;
 
   const ErrorState(this.message);
@@ -61,16 +65,16 @@ class OnGoingOperationState<T> extends LoadedState<T>
       [...super.props, this.operationTag, this.loadingMessage];
 }
 
-class FailedOperationState<T> extends LoadedState<T> with Operation {
+class FailedOperationState<T> extends LoadedState<T> with Operation implements Error {
   final String operationTag;
-  final String errorMessage;
+  final String message;
 
-  const FailedOperationState({T data, this.operationTag, this.errorMessage})
+  const FailedOperationState({T data, this.operationTag, this.message})
       : super(data);
 
   @override
   List<Object> get props =>
-      [...super.props, this.operationTag, this.errorMessage];
+      [...super.props, this.operationTag, this.message];
 }
 
 class SuccessfulOperationState<T, S> extends LoadedState<T> with Operation {
