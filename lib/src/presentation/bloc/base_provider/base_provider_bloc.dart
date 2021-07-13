@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
-import 'package:collection/collection.dart' show IterableExtension;
 import 'package:dartz/dartz.dart';
 import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:flutter/cupertino.dart';
@@ -20,16 +19,17 @@ abstract class BaseProviderBloc<Input, Output>
   final LifecycleObserver? observer;
 
   final debounceMilliseconds = Duration(milliseconds: 100);
-  final BehaviorSubject<Output?> dataSubject = BehaviorSubject<Output>();
+  final BehaviorSubject<Output?> dataSubject = BehaviorSubject<Output?>();
   final stateSubject = BehaviorSubject<BaseProviderState<Output>>();
   var _dataFuture = Completer<Output>();
   var _stateFuture = Completer<BaseProviderState<Output>>();
 
   Output? get currentData => dataSubject.value;
 
-  Stream<Output> get dataStream => LazyStream(() => dataSubject
+  Stream<Output?> get dataStream => LazyStream(() => dataSubject
       .shareValue()
-      .asBroadcastStream(onCancel: ((sub) => sub.cancel()) as void Function(StreamSubscription<Output?>)?) as FutureOr<Stream<Output>>);
+      .asBroadcastStream(onCancel: ((sub) => sub.cancel())));
+
   Stream<BaseProviderState<Output>> get stateStream =>
       LazyStream(() => stateSubject
           .shareValue()
@@ -149,7 +149,7 @@ abstract class BaseProviderBloc<Input, Output>
           emitLoading();
           _cancelable?.cancel();
           _cancelable = null;
-        } as void Function(Input?))
+        })
         .switchMap<Tuple2<Input, List<BaseProviderState<dynamic>>>>((event) {
           if (additionalSources.isEmpty) {
             return Stream.value(Tuple2(event, []));
@@ -158,12 +158,14 @@ abstract class BaseProviderBloc<Input, Output>
                     Tuple2<Input, List<BaseProviderState<dynamic>>>>(
                 additionalSources, (a) => Tuple2(event, a));
           }
-        } as Stream<Tuple2<Input, List<BaseProviderState<dynamic>>>> Function(Input?))
+        } as Stream<Tuple2<Input, List<BaseProviderState<dynamic>>>> Function(
+            Input?))
         .where(shouldProcessEvents)
         .throttleTime(debounceMilliseconds, trailing: true)
         .asyncMap((event) async {
-          BaseErrorState? errorState = event.value2.firstWhereOrNull(
-              (element) => element is BaseErrorState) as BaseErrorState<dynamic>?;
+          BaseErrorState? errorState = event.value2
+                  .firstWhereOrNull((element) => element is BaseErrorState)
+              as BaseErrorState<dynamic>?;
           if (errorState != null) {
             throw FlutterError(errorState.message!);
           } else if (event.value2
@@ -187,7 +189,8 @@ abstract class BaseProviderBloc<Input, Output>
             }
             return result!;
           }
-        } as FutureOr<Output> Function(Tuple2<Input, List<BaseProviderState<dynamic>>>));
+        } as FutureOr<Output> Function(
+            Tuple2<Input, List<BaseProviderState<dynamic>>>));
     _listenerSub?.cancel();
     _listenerSub = convertStream<Output>(dataStream).doOnData((event) {
       emitLoading();
@@ -245,7 +248,8 @@ abstract class BaseProviderBloc<Input, Output>
   void getData() {
     listening = true;
     final Future<Either<Failure, Input>>? result = this.result;
-    final FutureOr<Either<Failure, Stream<Input>>>? dataSource = this.dataSource;
+    final FutureOr<Either<Failure, Stream<Input>>>? dataSource =
+        this.dataSource;
     final additionalSources = this.additionalSources;
     if (dataSource != null) {
       _handleOperation(dataSource);
@@ -288,7 +292,8 @@ abstract class BaseProviderBloc<Input, Output>
       {Out? outData, Stream<Map<String, Out>>? outStream}) {
     if (outStream != null) {
       return CombineLatestStream.list([stateStream, outStream]).map((event) {
-        return _switch<Out>(event.first as BaseProviderState<Output>, event.last as Out);
+        return _switch<Out>(
+            event.first as BaseProviderState<Output>, event.last as Out);
       }).asBroadcastStream(onCancel: (sub) => sub.cancel());
     } else {
       return stateStream.map((value) {
