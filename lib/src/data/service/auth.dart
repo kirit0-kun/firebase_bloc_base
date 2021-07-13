@@ -14,9 +14,9 @@ enum SignInMethod {
 }
 
 abstract class BaseAuth {
-  Stream<User> get userChanges;
+  Stream<User?> get userChanges;
 
-  Future<User> getUser();
+  Future<User?> getUser();
   Future<UserCredential> signIn(String email, String password);
   Future<UserCredential> anonymousSignIn();
   Future<UserCredential> signUp(String email, String password);
@@ -27,7 +27,7 @@ abstract class BaseAuth {
   Future<void> resetPassword(String email);
   Future<void> signOut();
   Future<UserCredential> setPhoneNumber(
-      String phoneNumber, Future<String> Function() getCode);
+      String phoneNumber, Future<String> Function()? getCode);
   Future<AuthCredential> verifyPhoneNumber(
       String phoneNumber, Future<String> Function() getCode);
 }
@@ -46,30 +46,30 @@ class SimpleAuth implements BaseAuth {
   };
 
   @override
-  Stream<User> get userChanges => _firebaseAuth.userChanges();
+  Stream<User?> get userChanges => _firebaseAuth.userChanges();
 
   @override
   Future<UserCredential> signUp(String email, String password) async {
     final user = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email, password: password);
-    await user.user.sendEmailVerification();
+    await user.user!.sendEmailVerification();
     return user;
   }
 
   @override
   Future<void> changePassword(String oldPassword, String newPassword) async {
-    return signIn(_firebaseAuth.currentUser.email, oldPassword)
-        .then((value) => value.user.updatePassword(newPassword));
+    return signIn(_firebaseAuth.currentUser!.email!, oldPassword)
+        .then((value) => value.user!.updatePassword(newPassword));
   }
 
   @override
   Future<void> changeEmail(String email) async {
-    await _firebaseAuth.currentUser.verifyBeforeUpdateEmail(email);
+    await _firebaseAuth.currentUser!.verifyBeforeUpdateEmail(email);
   }
 
   @override
-  Future<User> getUser() async {
-    User user = _firebaseAuth.currentUser;
+  Future<User?> getUser() async {
+    User? user = _firebaseAuth.currentUser;
     return user;
   }
 
@@ -105,10 +105,10 @@ class SimpleAuth implements BaseAuth {
 
   @override
   Future<AuthCredential> verifyPhoneNumber(
-      String newPhone, Future<String> Function() getCode) async {
+      String newPhone, Future<String> Function()? getCode) async {
     Completer<AuthCredential> completer = Completer();
     String storedVerificationId;
-    int resendToken;
+    int? resendToken;
     await _firebaseAuth.verifyPhoneNumber(
         phoneNumber: newPhone,
         verificationCompleted: (PhoneAuthCredential credential) async {
@@ -117,10 +117,10 @@ class SimpleAuth implements BaseAuth {
         verificationFailed: (FirebaseAuthException error) {
           completer.completeError(error);
         },
-        codeSent: (String verificationId, int forceResendingToken) async {
+        codeSent: (String verificationId, int? forceResendingToken) async {
           storedVerificationId = verificationId;
           resendToken = forceResendingToken;
-          final code = await getCode();
+          final code = await getCode!();
           if (code == null) {
             completer
                 .completeError(FlutterError('Must validate your phone number'));
@@ -139,10 +139,10 @@ class SimpleAuth implements BaseAuth {
 
   @override
   Future<UserCredential> setPhoneNumber(
-      String newPhone, Future<String> Function() getCode) async {
+      String newPhone, Future<String> Function()? getCode) async {
     final credentials = await verifyPhoneNumber(newPhone, getCode);
     final result =
-        await _firebaseAuth.currentUser.linkWithCredential(credentials);
+        await _firebaseAuth.currentUser!.linkWithCredential(credentials);
     return result;
   }
 

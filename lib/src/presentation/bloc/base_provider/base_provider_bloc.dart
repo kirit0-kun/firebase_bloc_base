@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:dartz/dartz.dart';
 import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:flutter/cupertino.dart';
@@ -16,19 +17,19 @@ export 'provider_state.dart';
 
 abstract class BaseProviderBloc<Input, Output>
     extends Cubit<BaseProviderState<Output>> with LifecycleAware {
-  final LifecycleObserver observer;
+  final LifecycleObserver? observer;
 
   final debounceMilliseconds = Duration(milliseconds: 100);
-  final dataSubject = BehaviorSubject<Output>();
+  final BehaviorSubject<Output?> dataSubject = BehaviorSubject<Output>();
   final stateSubject = BehaviorSubject<BaseProviderState<Output>>();
   var _dataFuture = Completer<Output>();
   var _stateFuture = Completer<BaseProviderState<Output>>();
 
-  Output get currentData => dataSubject.value;
+  Output? get currentData => dataSubject.value;
 
   Stream<Output> get dataStream => LazyStream(() => dataSubject
       .shareValue()
-      .asBroadcastStream(onCancel: (sub) => sub.cancel()));
+      .asBroadcastStream(onCancel: ((sub) => sub.cancel()) as void Function(StreamSubscription<Output?>)?) as FutureOr<Stream<Output>>);
   Stream<BaseProviderState<Output>> get stateStream =>
       LazyStream(() => stateSubject
           .shareValue()
@@ -37,27 +38,27 @@ abstract class BaseProviderBloc<Input, Output>
   Future<Output> get dataFuture => _dataFuture.future;
   Future<BaseProviderState<Output>> get stateFuture => _stateFuture.future;
 
-  FutureOr<Either<Failure, Stream<Input>>> get dataSource => null;
-  Future<Either<Failure, Input>> get result => null;
+  FutureOr<Either<Failure, Stream<Input>>>? get dataSource => null;
+  Future<Either<Failure, Input>>? get result => null;
 
   List<Stream<BaseProviderState>> get additionalSources => [];
 
-  Lazy<Output> latestDataLazy;
-  Lazy<Output> latestCacheDataLazy;
+  Lazy<Output?>? latestDataLazy;
+  Lazy<Output?>? latestCacheDataLazy;
 
-  Output get latestData => latestDataLazy?.value;
-  Output get latestCacheData => latestCacheDataLazy?.value;
+  Output? get latestData => latestDataLazy?.value;
+  Output? get latestCacheData => latestCacheDataLazy?.value;
 
-  StreamSubscription _listenerSub;
-  Cancelable<Output> _cancelable;
+  StreamSubscription? _listenerSub;
+  Cancelable<Output>? _cancelable;
 
-  Timer _retryTimer;
+  Timer? _retryTimer;
 
-  bool listening;
+  late bool listening;
 
   bool get hasBranch => true;
 
-  Future<int> maxItems<T>() async => null;
+  Future<int?> maxItems<T>() async => null;
 
   BaseProviderBloc({bool getOnCreate = true, this.observer})
       : super(BaseLoadingState()) {
@@ -106,7 +107,7 @@ abstract class BaseProviderBloc<Input, Output>
     }
   }
 
-  void mapData(Output data) {
+  void mapData(Output? data) {
     latestDataLazy = Lazy(() => data);
     latestCacheDataLazy = Lazy(() => this.latestData);
     dataSubject.add(data);
@@ -142,13 +143,13 @@ abstract class BaseProviderBloc<Input, Output>
     );
   }
 
-  Future<void> _handleStream(Stream<Input> sourceStream) async {
+  Future<void> _handleStream(Stream<Input?> sourceStream) async {
     final dataStream = sourceStream
         .doOnData((event) {
           emitLoading();
           _cancelable?.cancel();
           _cancelable = null;
-        })
+        } as void Function(Input?))
         .switchMap<Tuple2<Input, List<BaseProviderState<dynamic>>>>((event) {
           if (additionalSources.isEmpty) {
             return Stream.value(Tuple2(event, []));
@@ -157,20 +158,19 @@ abstract class BaseProviderBloc<Input, Output>
                     Tuple2<Input, List<BaseProviderState<dynamic>>>>(
                 additionalSources, (a) => Tuple2(event, a));
           }
-        })
+        } as Stream<Tuple2<Input, List<BaseProviderState<dynamic>>>> Function(Input?))
         .where(shouldProcessEvents)
         .throttleTime(debounceMilliseconds, trailing: true)
         .asyncMap((event) async {
-          BaseErrorState errorState = event.value2.firstWhere(
-              (element) => element is BaseErrorState,
-              orElse: () => null);
+          BaseErrorState? errorState = event.value2.firstWhereOrNull(
+              (element) => element is BaseErrorState) as BaseErrorState<dynamic>?;
           if (errorState != null) {
-            throw FlutterError(errorState.message);
+            throw FlutterError(errorState.message!);
           } else if (event.value2
               .any((element) => element is BaseLoadingState)) {
             emitLoading();
           } else {
-            Output result;
+            Output? result;
             try {
               final data = event.value1;
               _cancelable?.cancel();
@@ -185,9 +185,9 @@ abstract class BaseProviderBloc<Input, Output>
                 throw e ?? FlutterError('An error occurred');
               }
             }
-            return result;
+            return result!;
           }
-        });
+        } as FutureOr<Output> Function(Tuple2<Input, List<BaseProviderState<dynamic>>>));
     _listenerSub?.cancel();
     _listenerSub = convertStream<Output>(dataStream).doOnData((event) {
       emitLoading();
@@ -217,7 +217,7 @@ abstract class BaseProviderBloc<Input, Output>
     _retryTimer?.cancel();
   }
 
-  void handleData(Output data) {}
+  void handleData(Output? data) {}
 
   Future<Output> convert(Input input);
 
@@ -244,8 +244,8 @@ abstract class BaseProviderBloc<Input, Output>
   @mustCallSuper
   void getData() {
     listening = true;
-    final result = this.result;
-    final dataSource = this.dataSource;
+    final Future<Either<Failure, Input>>? result = this.result;
+    final FutureOr<Either<Failure, Stream<Input>>>? dataSource = this.dataSource;
     final additionalSources = this.additionalSources;
     if (dataSource != null) {
       _handleOperation(dataSource);
@@ -268,7 +268,7 @@ abstract class BaseProviderBloc<Input, Output>
     return BaseLoadedState<Output>(data);
   }
 
-  BaseProviderState<Output> createErrorState<Output>(String message) {
+  BaseProviderState<Output> createErrorState<Output>(String? message) {
     return BaseErrorState<Output>(message);
   }
 
@@ -280,19 +280,19 @@ abstract class BaseProviderBloc<Input, Output>
     emit(createLoadedState<Output>(data));
   }
 
-  void emitError(String message) {
+  void emitError(String? message) {
     emit(createErrorState<Output>(message));
   }
 
-  Stream<BaseProviderState<Out>> transformStream<Out>(
-      {Out outData, Stream<Map<String, Out>> outStream}) {
+  Stream<BaseProviderState<Out?>> transformStream<Out>(
+      {Out? outData, Stream<Map<String, Out>>? outStream}) {
     if (outStream != null) {
       return CombineLatestStream.list([stateStream, outStream]).map((event) {
-        return _switch<Out>(event.first, event.last);
+        return _switch<Out>(event.first as BaseProviderState<Output>, event.last as Out);
       }).asBroadcastStream(onCancel: (sub) => sub.cancel());
     } else {
       return stateStream.map((value) {
-        return _switch<Out>(value, outData);
+        return _switch<Out?>(value, outData);
       }).asBroadcastStream(onCancel: (sub) => sub.cancel());
     }
   }

@@ -8,13 +8,13 @@ import 'base_provider_bloc.dart';
 
 abstract class BaseUserDependantProvider<Input, Output>
     extends BaseProviderBloc<Input, Output> {
-  String _lastUserId;
+  String? _lastUserId;
   final BaseUserBloc userBloc;
 
-  FirebaseProfile get currentUser => userBloc.currentUser;
-  String get userId => userBloc.currentUser?.id;
+  FirebaseProfile? get currentUser => userBloc.currentUser;
+  String? get userId => userBloc.currentUser?.id;
 
-  StreamSubscription<FirebaseProfile> userSubscription;
+  StreamSubscription<FirebaseProfile>? userSubscription;
 
   BaseUserDependantProvider(this.userBloc, LifecycleObserver observer)
       : super(getOnCreate: false, observer: observer) {

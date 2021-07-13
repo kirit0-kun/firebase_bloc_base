@@ -7,7 +7,7 @@ abstract class FirebaseRepository {
   const FirebaseRepository();
 
   FutureOr<Either<Failure, T>> tryWork<T>(FutureOr<T> work(),
-      [String customErrorIfNoMessage, Failure createFailure(String message)]) {
+      [String? customErrorIfNoMessage, Failure createFailure(String message)?]) {
     try {
       final workSync = work();
       if (workSync is Future<T>) {
@@ -35,14 +35,14 @@ abstract class FirebaseRepository {
   }
 
   Left<Failure, T> handleError<T>(error,
-      {String customErrorIfNoMessage, Failure createFailure(String message)}) {
-    String message = getErrorMessage(error, customErrorIfNoMessage);
+      {String? customErrorIfNoMessage, Failure createFailure(String message)?}) {
+    String? message = getErrorMessage(error, customErrorIfNoMessage);
     createFailure ??= (message) => Failure(message);
-    return Left(createFailure(message));
+    return Left(createFailure(message!));
   }
 
   FutureOr<ResponseEntity> tryWorkWithResponse(FutureOr work(),
-      [String customErrorIfNoMessage]) async {
+      [String? customErrorIfNoMessage]) async {
     try {
       await work();
       return Success();
@@ -53,8 +53,8 @@ abstract class FirebaseRepository {
     }
   }
 
-  String getErrorMessage(error, [String customErrorIfNoMessage]) {
-    String message;
+  String? getErrorMessage(error, [String? customErrorIfNoMessage]) {
+    String? message;
     try {
       message = error.message;
     } catch (e, s) {

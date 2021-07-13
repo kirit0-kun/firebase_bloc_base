@@ -15,24 +15,24 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
 
   final BaseUserRepository<UserType> _userRepository;
 
-  final _user = BehaviorSubject<User>();
-  final _userAccount = BehaviorSubject<UserType>();
+  final _user = BehaviorSubject<User?>();
+  final BehaviorSubject<UserType?> _userAccount = BehaviorSubject<UserType>();
 
-  StreamSubscription<UserType> _detailsSubscription;
-  StreamSubscription<User> _userSubscription;
-  Stream<User> get userChanges => _user.shareValue();
-  Stream<UserType> get userStream => _userAccount.shareValue();
+  StreamSubscription<UserType?>? _detailsSubscription;
+  StreamSubscription<User?>? _userSubscription;
+  Stream<User> get userChanges => _user.shareValue() as Stream<User>;
+  Stream<UserType> get userStream => _userAccount.shareValue() as Stream<UserType>;
 
-  bool signedUp;
+  bool signedUp = false;
 
-  UserType currentUser;
+  UserType? currentUser;
 
   BaseUserBloc(this._userRepository) : super(UserLoadingState()) {
     autoSignIn().catchError((e, s) {
       print(e);
       print(s);
     });
-    _userSubscription = _userRepository.userChanges.listen((User event) {
+    _userSubscription = _userRepository.userChanges.listen((User? event) {
       _user.add(event);
       if (event == null && state is SignedInState) {
         emit(SignedOutState());
@@ -58,7 +58,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
   }
 
   UserType syncUserDetails(UserType account, User user) {
-    account = account.copyWith(userDetails: user);
+    account = account.copyWith(userDetails: user) as UserType;
     return account;
   }
 
@@ -66,33 +66,33 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     signedUp = false;
     final Either<Failure, Stream<UserType>> result =
         await _userRepository.autoSignIn();
-    Completer<Either<Failure, UserType>> completer = userCompleter(result);
+    Completer<Either<Failure, UserType?>> completer = userCompleter(result);
     final futureResult = await completer.future;
-    futureResult.fold((l) => emit(SignedOutState()), (UserType r) {});
+    futureResult.fold((l) => emit(SignedOutState()), (UserType? r) {});
   }
 
-  Future<Either<Failure, UserType>> signIn(
+  Future<Either<Failure, UserType?>> signIn(
       String email, String password) async {
     signedUp = false;
     final result =
         await _userRepository.signInWithEmailAndPassword(email, password);
-    Completer<Either<Failure, UserType>> completer = userCompleter(result);
+    Completer<Either<Failure, UserType?>> completer = userCompleter(result);
     return completer.future;
   }
 
-  Future<Either<Failure, UserType>> signUp(
+  Future<Either<Failure, UserType?>> signUp(
       String firstName, String lastName, String email, String password) async {
     signedUp = true;
     final result = await _userRepository.signUpWithEmailAndPassword(
         firstName, lastName, email, password);
-    Completer<Either<Failure, UserType>> completer = userCompleter(result);
+    Completer<Either<Failure, UserType?>> completer = userCompleter(result);
     return completer.future;
   }
 
   Future<Either<Failure, UserType>> updateUser(UserType newDetails,
-      {String phoneNumber,
-      String email,
-      Future<String> Function() getCode}) async {
+      {String? phoneNumber,
+      String? email,
+      Future<String> Function()? getCode}) async {
     final result = await _userRepository.updateUserAccount(
         newDetails, phoneNumber, email, getCode);
     return result;
@@ -131,9 +131,9 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     return Left(Failure('Failed to send the email.'));
   }
 
-  Completer<Either<Failure, T>> userCompleter<T extends UserType>(
+  Completer<Either<Failure, T?>> userCompleter<T extends UserType>(
       Either<Failure, Stream<T>> result) {
-    Completer<Either<Failure, T>> completer = Completer();
+    Completer<Either<Failure, T?>> completer = Completer();
     result.fold((l) {
       if (!completer.isCompleted) {
         completer.complete(Left(l));
@@ -141,10 +141,10 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     }, (r) {
       _detailsSubscription?.cancel();
       _detailsSubscription = null;
-      final newStream = CombineLatestStream.combine2<T, User, T>(r, userChanges,
+      final newStream = CombineLatestStream.combine2<T, User, T?>(r, userChanges,
           (userAccount, user) {
         if (userAccount != null && user != null) {
-          return syncUserDetails(userAccount, user);
+          return syncUserDetails(userAccount, user) as T?;
         }
         return null;
       });
@@ -166,17 +166,17 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     return completer;
   }
 
-  Future<void> _handleUser(UserType event) async {
+  Future<void> _handleUser(UserType? event) async {
     currentUser = event;
     if (currentUser == null) {
       emit(SignedOutState());
     } else {
-      emitSignedUser(currentUser);
+      emitSignedUser(currentUser!);
     }
   }
 
   void emitSignedUser(UserType currentUser) {
-    final verificationLimit = currentUser.userDetails.metadata.creationTime
+    final verificationLimit = currentUser.userDetails!.metadata.creationTime!
         .add(emailVerificationDaysLimit);
     final now = DateTime.now();
     if (currentUser.email != 'testing@test.com' &&
@@ -184,7 +184,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
         verificationLimit.isBefore(now)) {
       emit(SignedInWithNoVerifiedEmailState(currentUser));
     } else {
-      if (currentUser.firstTime) {
+      if (currentUser.firstTime!) {
         emit(SignedUpState(currentUser));
       } else {
         emit(SignedInState(currentUser));

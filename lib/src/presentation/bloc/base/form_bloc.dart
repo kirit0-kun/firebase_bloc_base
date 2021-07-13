@@ -7,21 +7,21 @@ import '../../../../firebase_bloc_base.dart';
 import 'base_converter_bloc.dart';
 
 abstract class BaseFormBundle<T> extends Equatable {
-  final int pageNum;
+  final int? pageNum;
 
   const BaseFormBundle(this.pageNum);
 
   @override
-  List<Object> get props => [this.pageNum];
+  List<Object?> get props => [this.pageNum];
 }
 
 class DefaultFormBundle<T> extends BaseFormBundle<T> {
   final T object;
 
-  const DefaultFormBundle(int pageNum, this.object) : super(pageNum);
+  const DefaultFormBundle(int? pageNum, this.object) : super(pageNum);
 
   @override
-  List<Object> get props => [...super.props, this.object];
+  List<Object?> get props => [...super.props, this.object];
 }
 
 abstract class BaseFormBloc<EntityType,
@@ -30,22 +30,22 @@ abstract class BaseFormBloc<EntityType,
   static const _OPERATION = 'DEFAULT_OPERATION';
 
   final int startPageNum;
-  EntityType object;
-  EntityType initial;
+  EntityType? object;
+  EntityType? initial;
 
-  int statePageNum;
+  late int statePageNum;
   int get maxPages;
 
   bool get canSave => object != initial;
   bool get isLastPage => statePageNum + 1 == maxPages;
 
   BaseFormBundle<EntityType> get bundle =>
-      DefaultFormBundle<EntityType>(statePageNum, object);
+      DefaultFormBundle<EntityType>(statePageNum, object!);
 
-  FormBundleType get currentData => bundle;
+  FormBundleType get currentData => bundle as FormBundleType;
 
   @override
-  Future<FormBundleType> convert(EntityType input) async {
+  Future<FormBundleType> convert(EntityType? input) async {
     return currentData;
   }
 
@@ -56,14 +56,14 @@ abstract class BaseFormBloc<EntityType,
   }
 
   @mustCallSuper
-  Future<void> checkState(BlocState<FormBundleType> nextState) async {
-    return true;
+  Future<void> checkState(BlocState<FormBundleType?> nextState) async {
+    return;
   }
 
   BaseFormBloc(
-      {int startPageNum,
-      EntityType initialObject,
-      BaseProviderBloc<dynamic, EntityType> sourceBloc})
+      {int? startPageNum,
+      EntityType? initialObject,
+      BaseProviderBloc<dynamic, EntityType>? sourceBloc})
       : startPageNum = startPageNum ?? 0,
         super(sourceBloc: sourceBloc) {
     statePageNum = this.startPageNum;
@@ -104,5 +104,5 @@ abstract class BaseFormBloc<EntityType,
   bool cancel();
 
   // ignore: invalid_override_different_default_values_named
-  bool onCancel({String operationTag}) => cancel();
+  bool onCancel({String? operationTag}) => cancel();
 }

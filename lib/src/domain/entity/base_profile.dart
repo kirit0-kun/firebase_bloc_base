@@ -7,19 +7,19 @@ abstract class FirebaseProfile extends Equatable {
     this.userDetails,
   });
 
-  final User userDetails;
-  final bool firstTime;
+  final User? userDetails;
+  final bool? firstTime;
 
-  String get id => userDetails?.uid;
-  String get email => userDetails?.email;
-  String get phoneNumber => userDetails?.phoneNumber;
+  String? get id => userDetails?.uid;
+  String? get email => userDetails?.email;
+  String? get phoneNumber => userDetails?.phoneNumber;
 
   bool get emailVerified => userDetails?.emailVerified == true;
 
-  FirebaseProfile copyWith({User userDetails, bool firstTime});
+  FirebaseProfile copyWith({User? userDetails, bool? firstTime});
 
   @override
-  List<Object> get props => [
+  List<Object?> get props => [
         userDetails?.toString(),
         firstTime,
         id,

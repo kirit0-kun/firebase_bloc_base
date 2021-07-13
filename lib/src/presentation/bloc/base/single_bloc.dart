@@ -13,7 +13,7 @@ class BaseSingleBundle<T> extends Equatable {
   const BaseSingleBundle(this.edit, this.object);
 
   @override
-  List<Object> get props => [this.edit, this.object];
+  List<Object?> get props => [this.edit, this.object];
 }
 
 class SingleBundle<T> extends BaseSingleBundle<T> {
@@ -23,17 +23,17 @@ class SingleBundle<T> extends BaseSingleBundle<T> {
 abstract class SingleBloc<EntityType>
     extends BaseSingleBloc<EntityType, SingleBundle<EntityType>> {
   SingleBloc(
-      {String id,
-      EntityType initialObject,
-      BaseProviderBloc<dynamic, Map<String, EntityType>> providerBloc})
+      {String? id,
+      EntityType? initialObject,
+      BaseProviderBloc<dynamic, Map<String, EntityType>>? providerBloc})
       : super(id: id, providerBloc: providerBloc, initialObject: initialObject);
 
   @override
-  SingleBundle<EntityType> get currentData => SingleBundle(isEdit, object);
+  SingleBundle<EntityType> get currentData => SingleBundle(isEdit, object!);
 
   Future<SingleBundle<EntityType>> convert(
-      Map<String, EntityType> input) async {
-    final object = filter(input);
+      Map<String, EntityType>? input) async {
+    final object = filter(input!);
     if (object != null) {
       return SingleBundle(isEdit, object);
     } else {
@@ -48,16 +48,16 @@ abstract class BaseSingleBloc<EntityType,
     extends BaseConverterBloc<Map<String, EntityType>, BundleType> {
   static const DELETION_OPERATION = 'DELETION_OPERATION';
 
-  final String id;
-  EntityType object;
-  EntityType temp;
+  final String? id;
+  EntityType? object;
+  EntityType? temp;
 
   bool isEdit = false;
 
   BaseSingleBloc(
       {this.id,
-      EntityType initialObject,
-      BaseProviderBloc<dynamic, Map<String, EntityType>> providerBloc})
+      EntityType? initialObject,
+      BaseProviderBloc<dynamic, Map<String, EntityType>>? providerBloc})
       : super(sourceBloc: providerBloc) {
     if (initialObject != null) {
       object = initialObject;
@@ -72,8 +72,8 @@ abstract class BaseSingleBloc<EntityType,
     object = data.object;
   }
 
-  EntityType filter(Map<String, EntityType> input) {
-    final object = input[this.id];
+  EntityType? filter(Map<String, EntityType> input) {
+    final object = input[this.id!];
     return object;
   }
 
@@ -111,7 +111,7 @@ abstract class BaseSingleBloc<EntityType,
   }
 
   // ignore: invalid_override_different_default_values_named
-  bool onCancel({String operationTag}) => false;
+  bool onCancel({String? operationTag}) => false;
 
   Future<void> delete();
 }

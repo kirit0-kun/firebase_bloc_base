@@ -8,11 +8,11 @@ import 'base_provider_bloc.dart';
 abstract class BaseDependantProvider<Input, Output>
     extends BaseProviderBloc<Input, Output> {
   final Stream source;
-  StreamSubscription _subscription;
+  StreamSubscription? _subscription;
 
   BaseDependantProvider(this.source, LifecycleObserver observer)
       : super(getOnCreate: false, observer: observer) {
-    _subscription = source?.distinct()?.listen((event) {
+    _subscription = source.distinct().listen((event) {
       getData();
     });
   }

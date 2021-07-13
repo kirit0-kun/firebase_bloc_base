@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:worker_manager/worker_manager.dart';
@@ -13,23 +14,23 @@ abstract class BaseConverterBloc<Input, Output>
     extends BaseWorkingBloc<Output> {
   final debounceMilliseconds = Duration(milliseconds: 100);
 
-  StreamSubscription subscription;
-  StreamSubscription dataSubscription;
-  StreamSubscription sinkSubscription;
-  Cancelable<Output> _cancelable;
+  StreamSubscription? subscription;
+  StreamSubscription? dataSubscription;
+  StreamSubscription? sinkSubscription;
+  Cancelable<Output>? _cancelable;
 
-  Stream<BaseProviderState<Input>> get source => sourceBloc?.stateStream;
+  Stream<BaseProviderState<Input>>? get source => sourceBloc?.stateStream;
 
-  final BaseProviderBloc<dynamic, Input> sourceBloc;
+  final BaseProviderBloc<dynamic, Input>? sourceBloc;
 
-  List<Stream<BaseProviderState>> get additionalSources => null;
+  List<Stream<BaseProviderState>>? get additionalSources => null;
 
   Stream<List<BaseProviderState>> get combinedSource {
-    final source = this.source;
+    final Stream<BaseProviderState<Input>>? source = this.source;
     final additionalSources = this.additionalSources;
     List<Stream<BaseProviderState>> streams = [
       if (source != null) source,
-      if (additionalSources?.isNotEmpty == true) ...additionalSources,
+      if (additionalSources?.isNotEmpty == true) ...additionalSources!,
     ];
     return CombineLatestStream<BaseProviderState, List<BaseProviderState>>(
         streams, (a) => a).asBroadcastStream(onCancel: (sub) => sub.cancel());
@@ -37,16 +38,14 @@ abstract class BaseConverterBloc<Input, Output>
 
   final _eventsSubject = StreamController<List<BaseProviderState>>.broadcast();
   StreamSink<List<BaseProviderState>> get eventSink => _eventsSubject.sink;
-  Stream<List<BaseProviderState>> get eventStream =>
-      _eventsSubject.stream;
+  Stream<List<BaseProviderState>> get eventStream => _eventsSubject.stream;
 
   final _dataSubject = StreamController<Output>.broadcast();
   StreamSink<Output> get dataSink => _dataSubject.sink;
-  Stream<Output> get dataStream =>
-      _dataSubject.stream;
+  Stream<Output> get dataStream => _dataSubject.stream;
 
   BaseConverterBloc(
-      {this.sourceBloc, Output currentData, bool getOnCreate = true})
+      {this.sourceBloc, Output? currentData, bool getOnCreate = true})
       : super(currentData: currentData) {
     subscription = convertStream(eventStream)
         .doOnData((event) {
@@ -86,7 +85,7 @@ abstract class BaseConverterBloc<Input, Output>
 
   void getData() {
     sinkSubscription?.cancel();
-    sinkSubscription = combinedSource?.listen((event) => eventSink.add(event));
+    sinkSubscription = combinedSource.listen((event) => eventSink.add(event));
   }
 
   void setData(Output newData) {
@@ -98,7 +97,7 @@ abstract class BaseConverterBloc<Input, Output>
     if (sourceBloc == null) {
       getData();
     } else {
-      sourceBloc.getData();
+      sourceBloc!.getData();
     }
   }
 
@@ -113,9 +112,9 @@ abstract class BaseConverterBloc<Input, Output>
     return reload();
   }
 
-  Future<Output> convert(Input input);
+  Future<Output> convert(Input? input);
 
-  Cancelable<Output> _work(Input input) {
+  Cancelable<Output> _work(Input? input) {
     final result = convert(input);
     if (result is Cancelable<Output>) {
       return result;
@@ -130,10 +129,9 @@ abstract class BaseConverterBloc<Input, Output>
     }
   }
 
-  Input combineSources(List<BaseLoadedState> events) {
-    final dataEvent = events.firstWhere(
-        (element) => element is BaseLoadedState<Input>,
-        orElse: () => null);
+  Input? combineSources(List<BaseLoadedState> events) {
+    final dataEvent =
+        events.firstWhereOrNull((element) => element is BaseLoadedState<Input>);
     return dataEvent?.data;
   }
 
@@ -157,21 +155,21 @@ abstract class BaseConverterBloc<Input, Output>
         print(this);
         if (e is! CanceledError) {
           try {
-            emitError(e.message);
+            emitError((e as dynamic).message);
           } catch (_) {
             emitError('An error occurred');
           }
         }
       }
     } else {
-      BaseErrorState errorState = events.firstWhere(
-          (element) => element is BaseErrorState,
-          orElse: () => null);
+      BaseErrorState? errorState =
+          events.firstWhereOrNull((element) => element is BaseErrorState)
+              as BaseErrorState<dynamic>?;
       emitError(errorState?.message ?? 'An expected error occurred');
     }
   }
 
-  void handleInput(Input data) {}
+  void handleInput(Input? data) {}
   void handleData(Output data) {}
 
   @override

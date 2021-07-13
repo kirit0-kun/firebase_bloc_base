@@ -9,16 +9,16 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
   static const l = 10;
 
   const FirebaseQuerySwitcher({
-    int limit,
-    Map<String, dynamic> isEqualTo,
-    Map<String, dynamic> isNotEqualTo,
-    Map<String, dynamic> isLessThan,
-    Map<String, dynamic> isLessThanOrEqualTo,
-    Map<String, dynamic> isGreaterThan,
-    Map<String, dynamic> isGreaterThanOrEqualTo,
-    Map<String, dynamic> arrayContains,
-    List<MapEntry<String, bool>> orderBy,
-    List<MapEntry<String, bool>> isNull,
+    int? limit,
+    Map<String, dynamic>? isEqualTo,
+    Map<String, dynamic>? isNotEqualTo,
+    Map<String, dynamic>? isLessThan,
+    Map<String, dynamic>? isLessThanOrEqualTo,
+    Map<String, dynamic>? isGreaterThan,
+    Map<String, dynamic>? isGreaterThanOrEqualTo,
+    Map<String, dynamic>? arrayContains,
+    List<MapEntry<String, bool>>? orderBy,
+    List<MapEntry<String, bool>>? isNull,
     this.arrayContainsAny,
     this.whereIn,
     this.whereNotIn,
@@ -36,10 +36,10 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
           isNull: isNull,
         );
 
-  final Map<String, List<dynamic>> arrayContainsAny;
-  final Map<String, List<dynamic>> whereIn;
-  final Map<String, List<dynamic>> whereNotIn;
-  final DocumentSnapshot startAfter;
+  final Map<String, List<dynamic>>? arrayContainsAny;
+  final Map<String, List<dynamic>>? whereIn;
+  final Map<String, List<dynamic>>? whereNotIn;
+  final DocumentSnapshot? startAfter;
 
   Query applyToQuery(Query initial) {
     Query finalQuery = super.applyToQuery(initial);
@@ -53,15 +53,16 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
       finalQuery = finalQuery.where(key, whereNotIn: value);
     });
     if (startAfter != null) {
-      finalQuery = finalQuery.startAfterDocument(startAfter);
+      finalQuery = finalQuery.startAfterDocument(startAfter!);
     }
     return finalQuery;
   }
 
-  List<Query> moreThan10(Query initial, {bool arrayContainsAny, bool whereIn}) {
+  List<Query> moreThan10(Query initial,
+      {bool? arrayContainsAny, bool? whereIn}) {
     Query finalQuery = super.applyToQuery(initial);
     if (startAfter != null) {
-      finalQuery = finalQuery.startAfterDocument(startAfter);
+      finalQuery = finalQuery.startAfterDocument(startAfter!);
     }
     whereNotIn?.forEach((key, value) {
       finalQuery = finalQuery.where(key, whereNotIn: value);
@@ -79,10 +80,10 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
     whereNotIn?.forEach((key, value) {
       finalQuery = finalQuery.where(key, whereNotIn: value);
     });
-    List<Query> newQueries;
+    List<Query>? newQueries;
     if (arrayContainsAny == true && this.arrayContainsAny != null) {
       newQueries = this
-          .arrayContainsAny
+          .arrayContainsAny!
           .entries
           .map((entry) {
             return _split(entry.value)
@@ -95,7 +96,7 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
     }
     if (whereIn == true && this.whereIn != null) {
       newQueries = this
-          .whereIn
+          .whereIn!
           .entries
           .map((entry) {
             return _split(entry.value)
@@ -110,13 +111,12 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
   }
 
   Future<List<QueryDocumentSnapshot>> moreThan10Future(Query initial,
-      {bool arrayContainsAny, bool whereIn}) {
+      {bool? arrayContainsAny, bool? whereIn}) {
     final futures = moreThan10(initial,
             whereIn: whereIn, arrayContainsAny: arrayContainsAny)
-        .map((query) => query.get().then((value) => value?.docs));
+        .map((query) => query.get().then((value) => value.docs));
     return Future.wait(futures).then((value) {
       final entries = value
-          .where((element) => element != null)
           .expand((element) => element)
           .where((element) => element.exists)
           .toList();
@@ -134,16 +134,15 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
   }
 
   Stream<List<QueryDocumentSnapshot>> moreThan10Stream(Query initial,
-      {bool arrayContainsAny, bool whereIn}) {
+      {bool? arrayContainsAny, bool? whereIn}) {
     final futures = moreThan10(initial,
             whereIn: whereIn, arrayContainsAny: arrayContainsAny)
         .map((query) =>
-            query.snapshots().defaultIfEmpty(null).map((value) => value?.docs))
+            query.snapshots().map((value) => value.docs).defaultIfEmpty([]))
         .toList();
     return CombineLatestStream<List<QueryDocumentSnapshot>,
         List<QueryDocumentSnapshot>>(futures, (streams) {
       final entries = streams
-          .where((element) => element != null)
           .expand((element) => element)
           .where((element) => element.exists)
           .toList();
@@ -162,22 +161,24 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
 
   Future<List<T>> moreThan10FutureTransform<T>(
       Query initial, FutureOr<T> Function(Map<String, dynamic>) transform,
-      {bool arrayContainsAny, bool whereIn}) {
+      {bool? arrayContainsAny, bool? whereIn}) {
     return moreThan10Future(initial,
             arrayContainsAny: arrayContainsAny, whereIn: whereIn)
         .then((value) async {
-      final futures = value.map((data) async => await transform(data.data()));
+      final futures = value.map(
+          (data) async => await transform(data.data() as Map<String, dynamic>));
       return await Future.wait(futures);
     });
   }
 
   Stream<List<T>> moreThan10StreamTransform<T>(
       Query initial, FutureOr<T> Function(Map<String, dynamic>) transform,
-      {bool arrayContainsAny, bool whereIn}) {
+      {bool? arrayContainsAny, bool? whereIn}) {
     return moreThan10Stream(initial,
             arrayContainsAny: arrayContainsAny, whereIn: whereIn)
         .asyncMap((list) async {
-      final futures = list.map((data) async => await transform(data.data()));
+      final futures = list.map(
+          (data) async => await transform(data.data() as Map<String, dynamic>));
       return await Future.wait(futures);
     });
   }

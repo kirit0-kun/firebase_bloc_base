@@ -7,7 +7,7 @@ abstract class BaseProviderState<T> extends Equatable {
   bool get stringify => true;
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class BaseLoadingState<T> extends BaseProviderState<T> {
@@ -24,14 +24,14 @@ class BaseLoadedState<T> extends BaseProviderState<T> {
   const BaseLoadedState(this.data);
 
   @override
-  List<Object> get props => [this.data];
+  List<Object?> get props => [this.data];
 }
 
 class BaseErrorState<T> extends BaseProviderState<T> {
-  final String message;
+  final String? message;
 
   const BaseErrorState(this.message);
 
   @override
-  List<Object> get props => [this.message];
+  List<Object?> get props => [this.message];
 }

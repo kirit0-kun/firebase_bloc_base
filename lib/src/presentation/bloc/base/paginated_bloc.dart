@@ -7,8 +7,8 @@ export 'working_state.dart';
 abstract class PaginatedConverterBloc<Input, Output>
     extends BaseConverterBloc<Input, Output> with PaginatedMixin<Output> {
   PaginatedConverterBloc(
-      {Output currentData,
-      BaseProviderBloc<dynamic, Input> sourceBloc,
+      {Output? currentData,
+      BaseProviderBloc<dynamic, Input>? sourceBloc,
       bool getOnCreate = true})
       : super(
             currentData: currentData,

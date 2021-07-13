@@ -9,7 +9,7 @@ import 'paginated_state.dart';
 
 class PaginatedData<T> extends Equatable {
   final Map<int, T> data;
-  final bool isThereMore;
+  final bool? isThereMore;
   final int currentPage;
 
   const PaginatedData(this.data, this.isThereMore, this.currentPage);
@@ -21,44 +21,45 @@ class PaginatedData<T> extends Equatable {
 mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
   int get startPage => 1;
 
-  int _currentPage;
+  int? _currentPage;
 
   int get currentPage => _currentPage ?? startPage;
   int get lastPage =>
-      paginatedData?.data?.keys
-          ?.fold(0, (previousValue, element) => max(previousValue, element)) ??
+      paginatedData?.data.keys
+          .fold(0, (previousValue, element) => max(previousValue!, element)) ??
       2;
 
   bool get canGoBack => currentPage > startPage;
   bool get canGoForward => currentPage < lastPage || isThereMore;
   bool get isThereMore => paginatedData?.isThereMore ?? true;
 
-  set currentPage(int newPage) {
+  set currentPage(int? newPage) {
     _currentPage = newPage;
   }
 
-  PaginatedData<Output> paginatedData;
+  PaginatedData<Output>? paginatedData;
 
-  Stream<PaginatedData<Output>> get paginatedStream => async.LazyStream(
+  Stream<PaginatedData<Output>?> get paginatedStream => async.LazyStream(
       () => stateStream.map((event) => paginatedData).distinct());
 
   @override
   void setData(Output newData) {
     final map = paginatedData?.data ?? <int, Output>{};
     final newMap = Map.of(map);
-    final isThereMore = currentPage > newMap.length ? canGetMore(newData) : this.isThereMore;
+    final isThereMore =
+        currentPage > newMap.length ? canGetMore(newData) : this.isThereMore;
     newMap[currentPage] = newData;
     paginatedData = PaginatedData(newMap, isThereMore, currentPage);
-    super.setData(selectData(paginatedData));
+    super.setData(selectData(paginatedData!));
   }
 
   Output selectData(PaginatedData<Output> data) {
-    return data.data[data.currentPage];
+    return data.data[data.currentPage]!;
   }
 
   void getData();
 
-  bool canGetMore(Output newData) {
+  bool? canGetMore(Output newData) {
     if (newData == null) {
       return false;
     } else if (newData is Iterable) {
@@ -89,7 +90,7 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
   void back() async {
     if (canGoBack) {
       currentPage--;
-      final previousData = paginatedData?.data[currentPage];
+      final previousData = paginatedData!.data[currentPage]!;
       setData(previousData);
     }
   }
@@ -102,7 +103,7 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
   }
 
   @override
-  void emitError(String message) {
+  void emitError(String? message) {
     if (currentPage != startPage) {
       currentPage--;
     } else {

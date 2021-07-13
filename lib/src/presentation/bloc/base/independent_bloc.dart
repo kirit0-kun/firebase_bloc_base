@@ -8,7 +8,7 @@ abstract class IndependentConverterBloc<Input, Output>
     extends BaseConverterBloc<Input, Output>
     with IndependentMixin<Input, Output> {
   IndependentConverterBloc({
-    Output currentData,
+    Output? currentData,
     bool getOnCreate = true,
   }) : super(currentData: currentData, getOnCreate: getOnCreate);
 }

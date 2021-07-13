@@ -46,61 +46,61 @@ abstract class BaseListingBloc<EntityType, Filter, Grouping, Sorting>
         ListingBundle<EntityType>> {
   bool isSearch = false;
 
-  Sorting get initialSorting => null;
+  Sorting? get initialSorting => null;
 
-  Filter get filter => _filterStream.value;
-  set filter(Filter newFilter) {
+  Filter? get filter => _filterStream.value;
+  set filter(Filter? newFilter) {
     if (newFilter != filter) _filterStream.add(newFilter);
   }
 
-  final _filterStream = BehaviorSubject<Filter>()..add(null);
+  final _filterStream = BehaviorSubject<Filter?>()..add(null);
 
-  Sorting get sorting => _sortingStream.value;
-  set sorting(Sorting newSorting) {
+  Sorting? get sorting => _sortingStream.value;
+  set sorting(Sorting? newSorting) {
     if (newSorting != sorting) _sortingStream.add(newSorting);
   }
 
-  final _sortingStream = BehaviorSubject<Sorting>()..add(null);
+  final _sortingStream = BehaviorSubject<Sorting?>()..add(null);
 
-  Grouping get grouping => _groupingStream.value;
-  set grouping(Grouping newGrouping) {
+  Grouping? get grouping => _groupingStream.value;
+  set grouping(Grouping? newGrouping) {
     if (newGrouping != grouping) _groupingStream.add(newGrouping);
   }
 
-  final _groupingStream = BehaviorSubject<Grouping>()..add(null);
+  final _groupingStream = BehaviorSubject<Grouping?>()..add(null);
 
   Stream<BaseProviderState<Map<String, EntityType>>> get source =>
       CombineLatestStream.combine4<
               BaseProviderState<Map<String, EntityType>>,
-              Filter,
-              Grouping,
-              Sorting,
-              BaseProviderState<Map<String, EntityType>>>(super.source,
+              Filter?,
+              Grouping?,
+              Sorting?,
+              BaseProviderState<Map<String, EntityType>>>(super.source!,
           _filterStream, _groupingStream, _sortingStream, (a, b, c, d) => a);
 
   BaseListingBloc({
-    BaseProviderBloc<dynamic, Map<String, EntityType>> sourceBloc,
+    BaseProviderBloc<dynamic, Map<String, EntityType>>? sourceBloc,
   }) : super(sourceBloc: sourceBloc) {
     sorting = initialSorting;
   }
 
   @override
-  Future<ListingBundle<EntityType>> convert(Map<String, EntityType> input) {
-    final values = sourceBloc.latestData.values.toList();
+  Future<ListingBundle<EntityType>> convert(Map<String, EntityType>? input) {
+    final List<EntityType> values = sourceBloc!.latestData!.values.toList();
     return filtered(values, filter, grouping, sorting);
   }
 
   Future<ListingBundle<EntityType>> filtered(
     List<EntityType> input,
-    Filter filter,
-    Grouping grouping,
-    Sorting sorting,
+    Filter? filter,
+    Grouping? grouping,
+    Sorting? sorting,
   );
 
   void search() {
     if (state is LoadedState) {
       isSearch = true;
-      currentData = currentData?.withSearch(isSearch);
+      currentData = currentData.withSearch(isSearch);
       emitLoaded();
     }
   }
@@ -109,13 +109,13 @@ abstract class BaseListingBloc<EntityType, Filter, Grouping, Sorting>
     if (state is LoadedState) {
       filter = null;
       isSearch = false;
-      currentData = currentData?.withSearch(isSearch);
+      currentData = currentData.withSearch(isSearch);
       emitLoaded();
     }
   }
 
   // ignore: invalid_override_different_default_values_named
-  bool onCancel({String operationTag}) => false;
+  bool onCancel({String? operationTag}) => false;
 
   @override
   Future<void> close() {

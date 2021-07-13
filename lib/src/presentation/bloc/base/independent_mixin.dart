@@ -10,11 +10,11 @@ export 'working_state.dart';
 mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output> {
   bool get getDataWhenSourceChange => false;
 
-  Either<Failure, Stream<Input>> get dataSourceStream => null;
-  Future<Either<Failure, Input>> get dataSourceFuture => null;
+  Either<Failure, Stream<Input>>? get dataSourceStream => null;
+  Future<Either<Failure, Input>>? get dataSourceFuture => null;
 
   get source {
-    final dataSource = this.dataSourceStream;
+    final Either<Failure, Stream<Input>>? dataSource = this.dataSourceStream;
     if (dataSource != null) {
       return dataSource
           .fold(
@@ -23,7 +23,7 @@ mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output> {
                 .map<BaseProviderState<Input>>(
                     (event) => BaseLoadedState<Input>(event))
                 .handleError((e, s) {
-              String error;
+              String? error;
               try {
                 error = e.message;
               } catch (_) {
@@ -34,7 +34,7 @@ mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output> {
           )
           .startWith(BaseLoadingState<Input>());
     }
-    final dataSourceFuture = this.dataSourceFuture;
+    final Future<Either<Failure, Input>>? dataSourceFuture = this.dataSourceFuture;
     if (dataSourceFuture != null) {
       return dataSourceFuture.asStream().map((event) {
         return event.fold(

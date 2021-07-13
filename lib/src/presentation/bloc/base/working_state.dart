@@ -7,36 +7,36 @@ abstract class BlocState<T> extends Equatable {
   bool get stringify => true;
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 abstract class Error {
-  String get message;
+  String? get message;
 }
 
 class LoadingState<T> extends BlocState<T> {}
 
 class ErrorState<T> extends BlocState<T> implements Error {
-  final String message;
+  final String? message;
 
   const ErrorState(this.message);
 
   @override
-  List<Object> get props => [this.message];
+  List<Object?> get props => [this.message];
 }
 
 class InsufficientLicenseState<T> extends ErrorState<T> {
   const InsufficientLicenseState(String message) : super(message);
 
   @override
-  List<Object> get props => [...super.props];
+  List<Object?> get props => [...super.props];
 }
 
 class BranchRequiredState<T> extends ErrorState<T> {
   const BranchRequiredState(String message) : super(message);
 
   @override
-  List<Object> get props => [...super.props];
+  List<Object?> get props => [...super.props];
 }
 
 class LoadedState<T> extends BlocState<T> {
@@ -45,49 +45,50 @@ class LoadedState<T> extends BlocState<T> {
   const LoadedState(this.data);
 
   @override
-  List<Object> get props => [this.data];
+  List<Object?> get props => [this.data];
 }
 
 abstract class Operation {
-  String get operationTag;
+  String? get operationTag;
 }
 
 class OnGoingOperationState<T> extends LoadedState<T>
     implements Operation, LoadingState<T> {
-  final String operationTag;
-  final String loadingMessage;
+  final String? operationTag;
+  final String? loadingMessage;
 
-  const OnGoingOperationState({T data, this.loadingMessage, this.operationTag})
+  const OnGoingOperationState(
+      {required T data, this.loadingMessage, this.operationTag})
       : super(data);
 
   @override
-  List<Object> get props =>
+  List<Object?> get props =>
       [...super.props, this.operationTag, this.loadingMessage];
 }
 
 class FailedOperationState<T> extends LoadedState<T>
     with Operation
     implements Error {
-  final String operationTag;
-  final String message;
+  final String? operationTag;
+  final String? message;
 
-  const FailedOperationState({T data, this.operationTag, this.message})
+  const FailedOperationState({required T data, this.operationTag, this.message})
       : super(data);
 
   @override
-  List<Object> get props => [...super.props, this.operationTag, this.message];
+  List<Object?> get props => [...super.props, this.operationTag, this.message];
 }
 
 class SuccessfulOperationState<T, S> extends LoadedState<T> with Operation {
-  final String operationTag;
-  final String successMessage;
-  final S result;
+  final String? operationTag;
+  final String? successMessage;
+  final S? result;
 
   const SuccessfulOperationState(
-      {T data, this.operationTag, this.successMessage, this.result})
+      {required T data, this.operationTag, this.successMessage, this.result})
       : super(data);
 
   @override
-  List<Object> get props =>
+  List<Object?> get props =>
       [...super.props, this.operationTag, this.successMessage];
 }

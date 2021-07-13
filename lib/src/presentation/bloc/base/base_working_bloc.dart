@@ -16,17 +16,25 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
 
   final scrollController = ScrollController();
 
-  Output currentData;
+  late Output currentData;
 
-  final _statesSubject = BehaviorSubject<BlocState<Output>>();
+  final BehaviorSubject<BlocState<Output>> _statesSubject =
+      BehaviorSubject<BlocState<Output>>();
   Stream<BlocState<Output>> get stateStream => _statesSubject
       .shareValue()
-      .asBroadcastStream(onCancel: (sub) => sub.cancel());
+      .asBroadcastStream(onCancel: ((sub) => sub.cancel()));
+
   StreamSink<BlocState<Output>> get stateSink => _statesSubject.sink;
 
   Map<String, String> _operationStack = {};
 
-  BaseWorkingBloc({this.currentData}) : super(LoadingState());
+  BaseWorkingBloc.work({required this.currentData}) : super(LoadingState());
+
+  BaseWorkingBloc({Output? currentData}) : super(LoadingState()) {
+    if (currentData != null || currentData?.runtimeType == Output) {
+      this.currentData = currentData!;
+    }
+  }
 
   @override
   void onChange(change) {
@@ -44,7 +52,7 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
   }
 
   void clean() {
-    currentData = null;
+    //currentData = null;
   }
 
   void emitLoading() {
@@ -55,7 +63,7 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     emit(LoadedState<Output>(currentData));
   }
 
-  void emitError(String message) {
+  void emitError(String? message) {
     emit(ErrorState<Output>(message));
   }
 
@@ -76,9 +84,9 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
   }
 
   Future<Operation> handleOperation<T>(FutureOr<Either<Failure, T>> result,
-      {String loadingMessage,
-      String successMessage,
-      String operationTag}) async {
+      {String? loadingMessage,
+      String? successMessage,
+      String? operationTag}) async {
     operationTag ??= DEFAULT_OPERATION;
     startOperation(loadingMessage ?? 'Loading', operationTag: operationTag);
     final future = await result;
@@ -87,14 +95,14 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
   }
 
   void interceptResponse(Future<Either<Failure, dynamic>> result,
-      {void onSuccess(), void onFailure()}) {
+      {void onSuccess()?, void onFailure()?}) {
     result.then((value) {
       value.fold((l) => onFailure?.call(), (r) => onSuccess?.call());
     });
   }
 
   Operation handleResponse<T>(Either<Failure, T> result,
-      {String successMessage, String operationTag}) {
+      {String? successMessage, String? operationTag}) {
     operationTag ??= DEFAULT_OPERATION;
     return result.fold(
         (l) =>
@@ -103,7 +111,7 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
             operationTag: operationTag, result: r));
   }
 
-  void startOperation(String message, {String operationTag}) {
+  void startOperation(String message, {String? operationTag}) {
     operationTag ??= DEFAULT_OPERATION;
     emit(OnGoingOperationState(
       data: currentData,
@@ -114,7 +122,7 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     checkOperations();
   }
 
-  void cancelOperation({String operationTag}) {
+  void cancelOperation({String? operationTag}) {
     operationTag ??= DEFAULT_OPERATION;
     if (onCancel(operationTag: operationTag)) {
       emitLoaded();
@@ -124,14 +132,14 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
 
   bool onCancel({String operationTag = DEFAULT_OPERATION}) => false;
 
-  void removeOperation({String operationTag}) {
+  void removeOperation({String? operationTag}) {
     _operationStack.remove(operationTag ?? DEFAULT_OPERATION);
     emitLoaded();
     checkOperations();
   }
 
   SuccessfulOperationState<Output, dynamic> successfulOperation(String message,
-      {String operationTag, dynamic result}) {
+      {String? operationTag, dynamic result}) {
     operationTag ??= DEFAULT_OPERATION;
     final newState = SuccessfulOperationState(
         data: currentData,
@@ -145,7 +153,7 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
   }
 
   FailedOperationState<Output> failedOperation(String message,
-      {String operationTag}) {
+      {String? operationTag}) {
     operationTag ??= DEFAULT_OPERATION;
     final newState = FailedOperationState(
       data: currentData,

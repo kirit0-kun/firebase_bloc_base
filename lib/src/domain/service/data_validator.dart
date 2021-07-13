@@ -38,11 +38,15 @@ class BaseDataValidator {
           {bool multiLine = false,
           bool caseSensitive = true,
           bool unicode = false,
-          bool dotAll = false}) =>
-      RegExp(regex,
-              caseSensitive: caseSensitive,
-              dotAll: dotAll,
-              multiLine: multiLine,
-              unicode: unicode)
-          .hasMatch(input);
+          bool dotAll = false}) {
+    if (input?.isNotEmpty != true) {
+      return false;
+    }
+    return RegExp(regex,
+        caseSensitive: caseSensitive,
+        dotAll: dotAll,
+        multiLine: multiLine,
+        unicode: unicode)
+        .hasMatch(input);
+  }
 }

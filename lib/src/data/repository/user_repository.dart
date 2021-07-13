@@ -18,11 +18,11 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
   String get signedOutError => "You were signed out";
   String get requestError => "Couldn't complete your request";
 
-  Stream<User> get userChanges {
+  Stream<User?> get userChanges {
     return auth.userChanges;
   }
 
-  Stream<T> signIn<T extends UserType>(User user, bool isNewUser) {
+  Stream<T> signIn<T extends UserType>(User? user, bool isNewUser) {
     if (user != null) {
       final userAccountStream = userDataSource
           .listenToUser(user)
@@ -36,9 +36,9 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
 
   Stream<T> signUp<T extends UserType>(
       UserCredential user, String firstName, String lastName) {
-    if (user != null) {
+    if (user.user != null) {
       final userAccountStream = userDataSource
-          .createUser(user.user,
+          .createUser(user.user!,
               firstName: firstName,
               lastName: lastName,
               requireConfirmation: false)
@@ -55,7 +55,7 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
       String email, String password) async {
     return tryWork(() async {
       final user = await auth.signIn(email, password);
-      return signIn<UserType>(user.user, user.additionalUserInfo.isNewUser);
+      return signIn<UserType>(user.user, user.additionalUserInfo!.isNewUser);
     });
   }
 
@@ -79,9 +79,9 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
   }
 
   Future<Either<Failure, UserType>> updateUserAccount(UserType userAccount,
-      [String phoneNumber,
-      String email,
-      Future<String> Function() getCode]) async {
+      [String? phoneNumber,
+      String? email,
+      Future<String> Function()? getCode]) async {
     return tryWork(() async {
       if (email != null && email != userAccount.email) {
         await auth.changeEmail(email);
@@ -91,9 +91,9 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
       }
       final user = await auth.getUser();
       if (user != null) {
-        userAccount = userAccount.copyWith(userDetails: user);
+        userAccount = userAccount.copyWith(userDetails: user) as UserType;
         final newUserType = await userDataSource.updateUserAccount(userAccount);
-        return newUserType;
+        return newUserType!;
       } else {
         throw Exception(signedOutError);
       }
