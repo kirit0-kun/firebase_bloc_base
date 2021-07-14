@@ -41,8 +41,8 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
   final Map<String, List<dynamic>>? whereNotIn;
   final DocumentSnapshot? startAfter;
 
-  Query applyToQuery(Query initial) {
-    Query finalQuery = super.applyToQuery(initial);
+  Query<T> applyToQuery<T>(Query<T> initial) {
+    Query<T> finalQuery = super.applyToQuery(initial);
     arrayContainsAny?.forEach((key, value) {
       finalQuery = finalQuery.where(key, arrayContainsAny: value);
     });
@@ -58,9 +58,9 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
     return finalQuery;
   }
 
-  List<Query> moreThan10(Query initial,
+  List<Query<T>> moreThan10<T>(Query<T> initial,
       {bool? arrayContainsAny, bool? whereIn}) {
-    Query finalQuery = super.applyToQuery(initial);
+    Query<T> finalQuery = super.applyToQuery(initial);
     if (startAfter != null) {
       finalQuery = finalQuery.startAfterDocument(startAfter!);
     }
@@ -80,7 +80,7 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
     whereNotIn?.forEach((key, value) {
       finalQuery = finalQuery.where(key, whereNotIn: value);
     });
-    List<Query>? newQueries;
+    List<Query<T>>? newQueries;
     if (arrayContainsAny == true && this.arrayContainsAny != null) {
       newQueries = this
           .arrayContainsAny!
@@ -110,7 +110,7 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
     return newQueries ?? [finalQuery];
   }
 
-  Future<List<QueryDocumentSnapshot>> moreThan10Future(Query initial,
+  Future<List<QueryDocumentSnapshot<T>>> moreThan10Future<T>(Query<T> initial,
       {bool? arrayContainsAny, bool? whereIn}) {
     final futures = moreThan10(initial,
             whereIn: whereIn, arrayContainsAny: arrayContainsAny)
@@ -121,7 +121,7 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
           .where((element) => element.exists)
           .toList();
       final emitted = <String>{};
-      final toEmit = <QueryDocumentSnapshot>[];
+      final toEmit = <QueryDocumentSnapshot<T>>[];
       entries.forEach((element) {
         final path = element.reference.path;
         if (!emitted.contains(path)) {
@@ -133,21 +133,21 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
     });
   }
 
-  Stream<List<QueryDocumentSnapshot>> moreThan10Stream(Query initial,
+  Stream<List<QueryDocumentSnapshot<T>>> moreThan10Stream<T>(Query<T> initial,
       {bool? arrayContainsAny, bool? whereIn}) {
     final futures = moreThan10(initial,
             whereIn: whereIn, arrayContainsAny: arrayContainsAny)
         .map((query) =>
             query.snapshots().map((value) => value.docs).defaultIfEmpty([]))
         .toList();
-    return CombineLatestStream<List<QueryDocumentSnapshot>,
-        List<QueryDocumentSnapshot>>(futures, (streams) {
+    return CombineLatestStream<List<QueryDocumentSnapshot<T>>,
+        List<QueryDocumentSnapshot<T>>>(futures, (streams) {
       final entries = streams
           .expand((element) => element)
           .where((element) => element.exists)
           .toList();
       final emitted = <String>{};
-      final toEmit = <QueryDocumentSnapshot>[];
+      final toEmit = <QueryDocumentSnapshot<T>>[];
       entries.forEach((element) {
         final path = element.reference.path;
         if (!emitted.contains(path)) {
@@ -159,26 +159,30 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
     });
   }
 
-  Future<List<T>> moreThan10FutureTransform<T>(
-      Query initial, FutureOr<T> Function(Map<String, dynamic>) transform,
+  Future<List<T>> moreThan10FutureTransform<S, T>(
+      Query<S> initial, FutureOr<T> Function(S)? transform,
       {bool? arrayContainsAny, bool? whereIn}) {
-    return moreThan10Future(initial,
+    if (transform == null && S == T) {
+      transform = (s) => s as T;
+    }
+    return moreThan10Future<S>(initial,
             arrayContainsAny: arrayContainsAny, whereIn: whereIn)
         .then((value) async {
-      final futures = value.map(
-          (data) async => await transform(data.data() as Map<String, dynamic>));
+      final futures = value.map((data) async => await transform!(data.data()));
       return await Future.wait(futures);
     });
   }
 
-  Stream<List<T>> moreThan10StreamTransform<T>(
-      Query initial, FutureOr<T> Function(Map<String, dynamic>) transform,
+  Stream<List<T>> moreThan10StreamTransform<S, T>(
+      Query<S> initial, FutureOr<T> Function(S)? transform,
       {bool? arrayContainsAny, bool? whereIn}) {
-    return moreThan10Stream(initial,
+    if (transform == null && S == T) {
+      transform = (s) => s as T;
+    }
+    return moreThan10Stream<S>(initial,
             arrayContainsAny: arrayContainsAny, whereIn: whereIn)
         .asyncMap((list) async {
-      final futures = list.map(
-          (data) async => await transform(data.data() as Map<String, dynamic>));
+      final futures = list.map((data) async => await transform!(data.data()));
       return await Future.wait(futures);
     });
   }

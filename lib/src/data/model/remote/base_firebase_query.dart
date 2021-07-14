@@ -27,8 +27,8 @@ class BaseFirebaseQuerySwitcher {
   final List<MapEntry<String, bool>>? orderBy;
   final List<MapEntry<String, bool>>? isNull;
 
-  Query applyToQuery(Query initial) {
-    Query finalQuery = initial;
+  Query<T> applyToQuery<T>(Query<T> initial) {
+    Query<T> finalQuery = initial;
     isEqualTo?.forEach((key, value) {
       finalQuery = finalQuery.where(key, isEqualTo: value);
     });
@@ -64,32 +64,44 @@ class BaseFirebaseQuerySwitcher {
     return finalQuery;
   }
 
-  Future<List<T>> future<T>(Query initial,
-      FutureOr<T> Function(Map<String, dynamic>) transform) async {
-    final future =
-        await applyToQuery(initial).get().then((value) => value?.docs);
-    if (future?.isNotEmpty == true) {
-      final futures = future!.map(
-          (item) async => await transform(item.data() as Map<String, dynamic>));
-      return await Future.wait(futures);
-    } else {
-      return [];
+  Future<List<T>> future<S, T>(
+      Query<S> initial, FutureOr<T> Function(S)? transform) async {
+    if (transform == null && S == T) {
+      transform = (s) async => s as T;
     }
+    final future =
+        await applyToQuery(initial).get().then((value) => value.objects);
+    final futures = future.map((item) async => await transform!(item));
+    return await Future.wait(futures);
   }
 
-  Stream<List<T>> stream<T>(
-      Query initial, FutureOr<T> Function(Map<String, dynamic>) transform) {
+  Stream<List<T>> stream<S, T>(
+      Query<S> initial, FutureOr<T> Function(S)? transform) {
+    if (transform == null && S == T) {
+      transform = (s) async => s as T;
+    }
     return applyToQuery(initial)
         .snapshots()
-        .map((value) => value?.docs)
+        .map((value) => value.objects)
         .asyncMap((event) async {
-      if (event?.isNotEmpty == true) {
-        final futures = event!.map((item) async =>
-            await transform(item.data() as Map<String, dynamic>));
-        return await Future.wait(futures);
-      } else {
-        return [];
-      }
+      final futures = event.map((item) async => await transform!(item));
+      return await Future.wait(futures);
     });
+  }
+}
+
+T? getDataIfNotNull<T>(DocumentSnapshot<Map<String, dynamic>> document,
+    T Function(Map<String, dynamic>) fromJson) {
+  final data = document.data();
+  if (document.exists && data != null) {
+    return fromJson(data);
+  } else {
+    return null;
+  }
+}
+
+extension EntityQueryFirestore<T> on QuerySnapshot<T?> {
+  List<T> get objects {
+    return this.docs.map((e) => e.data()).whereType<T>().toList();
   }
 }
