@@ -35,7 +35,7 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
   }
 
   Stream<T> signUp<T extends UserType>(
-      UserCredential user, String firstName, String lastName) {
+      UserCredential user, String? firstName, String? lastName) {
     if (user.user != null) {
       final userAccountStream = userDataSource
           .createUser(user.user!,
@@ -71,7 +71,10 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
   }
 
   Future<Either<Failure, Stream<UserType>>> signUpWithEmailAndPassword(
-      String firstName, String lastName, String email, String password) async {
+      String? firstName,
+      String? lastName,
+      String email,
+      String password) async {
     return tryWork(() async {
       final user = await auth.signUp(email, password);
       return signUp(user, firstName, lastName);

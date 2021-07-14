@@ -112,9 +112,9 @@ abstract class BaseConverterBloc<Input, Output>
     return reload();
   }
 
-  Future<Output> convert(Input? input);
+  Future<Output> convert(Input input);
 
-  Cancelable<Output> _work(Input? input) {
+  Cancelable<Output> _work(Input input) {
     final result = convert(input);
     if (result is Cancelable<Output>) {
       return result;
@@ -129,7 +129,7 @@ abstract class BaseConverterBloc<Input, Output>
     }
   }
 
-  Input? combineSources(List<BaseLoadedState> events) {
+  Input combineSources(List<BaseLoadedState> events) {
     final dataEvent =
         events.firstWhereOrNull((element) => element is BaseLoadedState<Input>);
     return dataEvent?.data;
@@ -169,7 +169,7 @@ abstract class BaseConverterBloc<Input, Output>
     }
   }
 
-  void handleInput(Input? data) {}
+  void handleInput(Input data) {}
   void handleData(Output data) {}
 
   @override

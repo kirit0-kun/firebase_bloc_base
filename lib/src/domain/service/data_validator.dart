@@ -14,39 +14,39 @@ class BaseDataValidator {
   String get nameRegex => kNameRegex;
   String get personRegex => kPersonNameRegex;
 
-  bool isEmailValid(String email) {
+  bool isEmailValid(String? email) {
     return match(email, emailRegex, caseSensitive: false);
   }
 
-  bool isPasswordValid(String password) {
+  bool isPasswordValid(String? password) {
     return match(password, passwordRegex);
   }
 
-  bool isNameValid(String name) {
+  bool isNameValid(String? name) {
     return match(name, nameRegex);
   }
 
-  bool isPhoneNumberValid(String phoneNumber) {
+  bool isPhoneNumberValid(String? phoneNumber) {
     return match(phoneNumber, phoneRegex);
   }
 
-  bool isPersonNameValid(String name) {
+  bool isPersonNameValid(String? name) {
     return match(name, personRegex);
   }
 
-  bool match(String input, String regex,
-          {bool multiLine = false,
-          bool caseSensitive = true,
-          bool unicode = false,
-          bool dotAll = false}) {
+  bool match(String? input, String regex,
+      {bool multiLine = false,
+      bool caseSensitive = true,
+      bool unicode = false,
+      bool dotAll = false}) {
     if (input?.isNotEmpty != true) {
       return false;
     }
     return RegExp(regex,
-        caseSensitive: caseSensitive,
-        dotAll: dotAll,
-        multiLine: multiLine,
-        unicode: unicode)
-        .hasMatch(input);
+            caseSensitive: caseSensitive,
+            dotAll: dotAll,
+            multiLine: multiLine,
+            unicode: unicode)
+        .hasMatch(input!);
   }
 }

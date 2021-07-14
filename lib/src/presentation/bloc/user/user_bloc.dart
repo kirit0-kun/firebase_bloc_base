@@ -21,7 +21,8 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
   StreamSubscription<UserType?>? _detailsSubscription;
   StreamSubscription<User?>? _userSubscription;
   Stream<User> get userChanges => _user.shareValue() as Stream<User>;
-  Stream<UserType> get userStream => _userAccount.shareValue() as Stream<UserType>;
+  Stream<UserType> get userStream =>
+      _userAccount.shareValue() as Stream<UserType>;
 
   bool signedUp = false;
 
@@ -80,8 +81,8 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     return completer.future;
   }
 
-  Future<Either<Failure, UserType?>> signUp(
-      String firstName, String lastName, String email, String password) async {
+  Future<Either<Failure, UserType?>> signUp(String? firstName, String? lastName,
+      String email, String password) async {
     signedUp = true;
     final result = await _userRepository.signUpWithEmailAndPassword(
         firstName, lastName, email, password);
@@ -141,8 +142,8 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     }, (r) {
       _detailsSubscription?.cancel();
       _detailsSubscription = null;
-      final newStream = CombineLatestStream.combine2<T, User, T?>(r, userChanges,
-          (userAccount, user) {
+      final newStream = CombineLatestStream.combine2<T, User, T?>(
+          r, userChanges, (userAccount, user) {
         if (userAccount != null && user != null) {
           return syncUserDetails(userAccount, user) as T?;
         }

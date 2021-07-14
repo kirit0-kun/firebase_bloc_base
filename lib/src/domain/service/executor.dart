@@ -51,7 +51,7 @@ class CustomExecutor implements Executor {
           fun4: fun4,
           priority: priority);
     } else {
-      return fakeExecute<A, B, C, D, O>(
+      return fakeExecute<A?, B?, C?, D?, O>(
           arg1: arg1,
           arg2: arg2,
           arg3: arg3,
