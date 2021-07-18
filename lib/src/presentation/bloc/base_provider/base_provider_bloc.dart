@@ -173,36 +173,34 @@ abstract class BaseProviderBloc<Input, Output>
                   .firstWhereOrNull((element) => element is BaseErrorState)
               as BaseErrorState<dynamic>?;
           if (errorState != null) {
-            throw FlutterError(errorState.message!);
+            return createErrorState<Output>(errorState.message!);
           } else if (event.value2
               .any((element) => element is BaseLoadingState)) {
-            emitLoading();
+            return createLoadingState<Output>();
           } else {
-            Output? result;
             try {
               final data = event.value1;
               _cancelable?.cancel();
               final cancelable = _work(data);
               _cancelable = cancelable;
-              result = await cancelable;
+              final result = await cancelable;
+              return createLoadedState(result);
             } catch (e, s) {
               print(e);
               print(s);
               print(this);
               if (e is! CanceledError) {
-                throw e ?? FlutterError('An error occurred');
+                throw e;
               }
             }
-            return result;
+            return null;
           }
         });
     _listenerSub?.cancel();
-    _listenerSub = convertStream<Output?>(dataStream).doOnData((event) {
-      emitLoading();
-    }).listen(
+    _listenerSub = convertStream(dataStream).listen(
       (event) {
         if (event != null) {
-          emitLoaded(event);
+          emit(event);
         }
       },
       onError: (e, s) {
