@@ -14,6 +14,12 @@ import 'provider_state.dart';
 
 export 'provider_state.dart';
 
+extension BehaviorSubjectExtension<T> on BehaviorSubject<T> {
+  T? get valueOrNull {
+    return hasValue ? value : null;
+  }
+}
+
 abstract class BaseProviderBloc<Input, Output>
     extends Cubit<BaseProviderState<Output>> with LifecycleAware {
   final LifecycleObserver? observer;
@@ -24,7 +30,7 @@ abstract class BaseProviderBloc<Input, Output>
   var _dataFuture = Completer<Output>();
   var _stateFuture = Completer<BaseProviderState<Output>>();
 
-  Output? get currentData => dataSubject.value;
+  Output? get currentData => dataSubject.valueOrNull;
 
   Stream<Output?> get dataStream => LazyStream(() => dataSubject
       .shareValue()

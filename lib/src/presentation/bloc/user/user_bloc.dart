@@ -53,7 +53,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
       signedUp = false;
       _detailsSubscription?.cancel();
     }
-    if (_userAccount.value != currentUser) {
+    if (!_userAccount.hasValue || _userAccount.value != currentUser) {
       _userAccount.add(currentUser);
     }
   }

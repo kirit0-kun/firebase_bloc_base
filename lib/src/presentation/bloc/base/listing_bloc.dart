@@ -48,21 +48,21 @@ abstract class BaseListingBloc<EntityType, Filter, Grouping, Sorting>
 
   Sorting? get initialSorting => null;
 
-  Filter? get filter => _filterStream.value;
+  Filter? get filter => _filterStream.valueOrNull;
   set filter(Filter? newFilter) {
     if (newFilter != filter) _filterStream.add(newFilter);
   }
 
   final _filterStream = BehaviorSubject<Filter?>()..add(null);
 
-  Sorting? get sorting => _sortingStream.value;
+  Sorting? get sorting => _sortingStream.valueOrNull;
   set sorting(Sorting? newSorting) {
     if (newSorting != sorting) _sortingStream.add(newSorting);
   }
 
   final _sortingStream = BehaviorSubject<Sorting?>()..add(null);
 
-  Grouping? get grouping => _groupingStream.value;
+  Grouping? get grouping => _groupingStream.valueOrNull;
   set grouping(Grouping? newGrouping) {
     if (newGrouping != grouping) _groupingStream.add(newGrouping);
   }
