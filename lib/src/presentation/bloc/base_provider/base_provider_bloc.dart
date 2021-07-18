@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
+import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:flutter/cupertino.dart';
@@ -156,16 +157,15 @@ abstract class BaseProviderBloc<Input, Output>
           _cancelable?.cancel();
           _cancelable = null;
         })
-        .switchMap<Tuple2<Input, List<BaseProviderState<dynamic>>>>((event) {
+        .switchMap<Tuple2<Input?, List<BaseProviderState<dynamic>>>>((event) {
           if (additionalSources.isEmpty) {
             return Stream.value(Tuple2(event, []));
           } else {
             return CombineLatestStream<BaseProviderState<dynamic>,
-                    Tuple2<Input, List<BaseProviderState<dynamic>>>>(
+                    Tuple2<Input?, List<BaseProviderState<dynamic>>>>(
                 additionalSources, (a) => Tuple2(event, a));
           }
-        } as Stream<Tuple2<Input, List<BaseProviderState<dynamic>>>> Function(
-            Input?))
+        })
         .where(shouldProcessEvents)
         .throttleTime(debounceMilliseconds, trailing: true)
         .asyncMap((event) async {
@@ -193,12 +193,11 @@ abstract class BaseProviderBloc<Input, Output>
                 throw e ?? FlutterError('An error occurred');
               }
             }
-            return result!;
+            return result;
           }
-        } as FutureOr<Output> Function(
-            Tuple2<Input, List<BaseProviderState<dynamic>>>));
+        });
     _listenerSub?.cancel();
-    _listenerSub = convertStream<Output>(dataStream).doOnData((event) {
+    _listenerSub = convertStream<Output?>(dataStream).doOnData((event) {
       emitLoading();
     }).listen(
       (event) {
@@ -228,9 +227,9 @@ abstract class BaseProviderBloc<Input, Output>
 
   void handleData(Output? data) {}
 
-  Future<Output> convert(Input input);
+  Future<Output> convert(Input? input);
 
-  Cancelable<Output> _work(Input input) {
+  Cancelable<Output> _work(Input? input) {
     final result = convert(input);
     if (result is Cancelable<Output>) {
       return result;
@@ -246,16 +245,15 @@ abstract class BaseProviderBloc<Input, Output>
   }
 
   bool shouldProcessEvents(
-      Tuple2<Input, List<BaseProviderState<dynamic>>> event) {
+      Tuple2<Input?, List<BaseProviderState<dynamic>>> event) {
     return true;
   }
 
   @mustCallSuper
   void getData() {
     listening = true;
-    final Future<Either<Failure, Input>>? result = this.result;
-    final FutureOr<Either<Failure, Stream<Input>>>? dataSource =
-        this.dataSource;
+    final result = this.result;
+    final dataSource = this.dataSource;
     final additionalSources = this.additionalSources;
     if (dataSource != null) {
       _handleOperation(dataSource);

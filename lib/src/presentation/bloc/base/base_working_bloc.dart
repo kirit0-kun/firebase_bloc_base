@@ -16,7 +16,20 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
 
   final scrollController = ScrollController();
 
-  late Output currentData;
+  late Output _currentData;
+  bool wasInitialized = false;
+  Output get currentData {
+    return _currentData;
+  }
+
+  Output? get safeData {
+    return wasInitialized ? _currentData : null;
+  }
+
+  set currentData(Output data) {
+    wasInitialized = true;
+    _currentData = data;
+  }
 
   final BehaviorSubject<BlocState<Output>> _statesSubject =
       BehaviorSubject<BlocState<Output>>();
@@ -28,7 +41,9 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
 
   Map<String, String> _operationStack = {};
 
-  BaseWorkingBloc.work({required this.currentData}) : super(LoadingState());
+  BaseWorkingBloc.work({required Output currentData}) : super(LoadingState()) {
+    this.currentData = currentData;
+  }
 
   BaseWorkingBloc({Output? currentData}) : super(LoadingState()) {
     if (currentData != null || currentData?.runtimeType == Output) {
@@ -64,6 +79,7 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
   }
 
   void emitError(String? message) {
+    print("Emitting error");
     emit(ErrorState<Output>(message));
   }
 

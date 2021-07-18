@@ -109,7 +109,7 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
     } else {
       currentPage = null;
     }
-    if (currentData == null) {
+    if (!wasInitialized || safeData == null) {
       super.emitError(message);
     } else {
       emit(ErrorGettingNextPageState<Output>(currentData, message));
@@ -118,7 +118,7 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
 
   @override
   void emitLoading() {
-    if (currentData == null) {
+    if (!wasInitialized || safeData == null) {
       super.emitLoading();
     } else {
       emit(LoadingNextPageState<Output>(currentData));
