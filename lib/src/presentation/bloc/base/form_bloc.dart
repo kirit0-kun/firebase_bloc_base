@@ -16,7 +16,7 @@ abstract class BaseFormBundle<T> extends Equatable {
 }
 
 class DefaultFormBundle<T> extends BaseFormBundle<T> {
-  final T object;
+  final T? object;
 
   const DefaultFormBundle(int? pageNum, this.object) : super(pageNum);
 
@@ -40,7 +40,7 @@ abstract class BaseFormBloc<EntityType,
   bool get isLastPage => statePageNum + 1 == maxPages;
 
   BaseFormBundle<EntityType> get bundle =>
-      DefaultFormBundle<EntityType>(statePageNum, object!);
+      DefaultFormBundle<EntityType>(statePageNum, object);
 
   FormBundleType get currentData => bundle as FormBundleType;
 

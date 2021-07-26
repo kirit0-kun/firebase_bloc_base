@@ -67,7 +67,7 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
   }
 
   void clean() {
-    //currentData = null;
+    wasInitialized = false;
   }
 
   void emitLoading() {
