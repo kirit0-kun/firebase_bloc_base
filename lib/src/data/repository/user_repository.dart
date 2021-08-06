@@ -27,7 +27,7 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
       final userAccountStream = userDataSource
           .listenToUser(user)
           .map((event) =>
-              event?.copyWith(userDetails: user, firstTime: isNewUser))
+              event!.copyWith(userDetails: user, firstTime: isNewUser))
           .cast<T>();
       return userAccountStream;
     }
@@ -41,9 +41,9 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
           .createUser(user.user!,
               firstName: firstName,
               lastName: lastName,
-              requireConfirmation: false)
+              requireConfirmation: true)
           .map((event) =>
-              event?.copyWith(userDetails: user.user, firstTime: true))
+              event!.copyWith(userDetails: user.user, firstTime: true))
           .cast<T>();
       return userAccountStream;
     } else {

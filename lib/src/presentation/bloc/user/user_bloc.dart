@@ -12,6 +12,8 @@ import 'user_state.dart';
 
 class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
   final emailVerificationDaysLimit = Duration(days: 7);
+  final userNotFoundError = "User not found";
+  final sendEmailError = 'Failed to send the email.';
 
   final BaseUserRepository<UserType> _userRepository;
 
@@ -65,9 +67,8 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
 
   Future<void> autoSignIn() async {
     signedUp = false;
-    final Either<Failure, Stream<UserType>> result =
-        await _userRepository.autoSignIn();
-    Completer<Either<Failure, UserType?>> completer = userCompleter(result);
+    final result = await _userRepository.autoSignIn();
+    final completer = userCompleter(result);
     final futureResult = await completer.future;
     futureResult.fold((l) => emit(SignedOutState()), (UserType? r) {});
   }
@@ -77,7 +78,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     signedUp = false;
     final result =
         await _userRepository.signInWithEmailAndPassword(email, password);
-    Completer<Either<Failure, UserType?>> completer = userCompleter(result);
+    final completer = userCompleter(result);
     return completer.future;
   }
 
@@ -86,7 +87,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     signedUp = true;
     final result = await _userRepository.signUpWithEmailAndPassword(
         firstName, lastName, email, password);
-    Completer<Either<Failure, UserType?>> completer = userCompleter(result);
+    final completer = userCompleter(result);
     return completer.future;
   }
 
@@ -120,16 +121,13 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
   }
 
   Future<Either<Failure, void>> sendEmailVerification() async {
-    final operation = currentUser?.userDetails?.sendEmailVerification();
-    if (operation != null) {
-      try {
-        final result = await operation;
-        return Right(result);
-      } catch (e, s) {
-        return Left(Failure('Failed to send the email.'));
-      }
+    try {
+      final operation = currentUser!.userDetails!.sendEmailVerification();
+      final result = await operation;
+      return Right(result);
+    } catch (e, s) {
+      return Left(Failure(sendEmailError));
     }
-    return Left(Failure('Failed to send the email.'));
   }
 
   Completer<Either<Failure, T?>> userCompleter<T extends UserType>(
@@ -142,26 +140,28 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     }, (r) {
       _detailsSubscription?.cancel();
       _detailsSubscription = null;
-      final newStream = CombineLatestStream.combine2<T, User, T?>(
-          r, userChanges, (userAccount, user) {
+      final newStream =
+          r.withLatestFrom<User?, T>(userChanges, (userAccount, user) {
         if (userAccount != null && user != null) {
-          return syncUserDetails(userAccount, user) as T?;
+          return syncUserDetails(userAccount, user) as T;
         }
-        return null;
+        throw Exception();
       });
       _detailsSubscription = newStream.listen((event) {
         if (!completer.isCompleted) {
           completer.complete(Right(event));
         }
         _handleUser(event);
-      }, onError: (e, s) {
+      }, onError: (e, s) async {
         print(e);
         print(s);
         if (!completer.isCompleted) {
-          completer.completeError(e, s);
+          completer.complete(Left(Failure(userNotFoundError)));
         }
-        signOut();
-        //emit(SignedOutState());
+        final result = await signOut();
+        if (result is! Success) {
+          emit(SignedOutState());
+        }
       });
     });
     return completer;
