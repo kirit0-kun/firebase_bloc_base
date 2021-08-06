@@ -14,15 +14,15 @@ abstract class BaseUserDependantProvider<Input, Output>
   FirebaseProfile? get currentUser => userBloc.currentUser;
   String? get userId => userBloc.currentUser?.id;
 
-  StreamSubscription<FirebaseProfile>? userSubscription;
+  StreamSubscription<FirebaseProfile?>? userSubscription;
 
   BaseUserDependantProvider(this.userBloc, LifecycleObserver observer)
       : super(getOnCreate: false, observer: observer) {
     userSubscription = userBloc.userStream.listen(
       (user) {
         if (user != null) {
-          if (_lastUserId != user?.id) {
-            _lastUserId = user?.id;
+          if (_lastUserId != user.id) {
+            _lastUserId = user.id;
             if (userId != null) {
               getData();
             }
