@@ -18,13 +18,12 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
   final BaseUserRepository<UserType> _userRepository;
 
   final _user = BehaviorSubject<User?>();
-  final BehaviorSubject<UserType?> _userAccount = BehaviorSubject<UserType>();
+  final BehaviorSubject<UserType?> _userAccount = BehaviorSubject<UserType?>();
 
   StreamSubscription<UserType?>? _detailsSubscription;
   StreamSubscription<User?>? _userSubscription;
-  Stream<User> get userChanges => _user.shareValue() as Stream<User>;
-  Stream<UserType> get userStream =>
-      _userAccount.shareValue() as Stream<UserType>;
+  Stream<User?> get userChanges => _user.shareValue();
+  Stream<UserType?> get userStream => _userAccount.shareValue();
 
   bool signedUp = false;
 
