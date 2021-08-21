@@ -17,7 +17,7 @@ class Success extends ResponseEntity {
 }
 
 class Failure extends ResponseEntity {
-  const Failure(String? message) : super(message);
+  const Failure(String message) : super(message);
 
   @override
   List<Object?> get props => [...super.props];

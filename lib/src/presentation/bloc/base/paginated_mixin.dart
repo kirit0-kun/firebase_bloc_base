@@ -103,7 +103,7 @@ mixin PaginatedMixin<Output> on BaseWorkingBloc<Output> {
   }
 
   @override
-  void emitError(String? message) {
+  void emitError(String message) {
     if (currentPage != startPage) {
       currentPage--;
     } else {

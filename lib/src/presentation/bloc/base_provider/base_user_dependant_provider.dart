@@ -6,34 +6,37 @@ import 'package:firebase_bloc_base/src/presentation/bloc/user/user_bloc.dart';
 
 import 'base_provider_bloc.dart';
 
-abstract class BaseUserDependantProvider<Input, Output>
-    extends BaseProviderBloc<Input, Output> {
-  String? _lastUserId;
-  final BaseUserBloc userBloc;
+abstract class BaseUserDependantProvider<Input, Output,
+    UserType extends FirebaseProfile> extends BaseProviderBloc<Input, Output> {
+  UserType? _lastUser;
+  final BaseUserBloc<UserType> userBloc;
 
-  FirebaseProfile? get currentUser => userBloc.currentUser;
+  UserType? get currentUser => userBloc.currentUser;
   String? get userId => userBloc.currentUser?.id;
 
-  StreamSubscription<FirebaseProfile?>? userSubscription;
+  StreamSubscription<UserType?>? userSubscription;
 
   BaseUserDependantProvider(this.userBloc, LifecycleObserver observer)
       : super(getOnCreate: false, observer: observer) {
-    userSubscription = userBloc.userStream.listen(
+    userSubscription = userBloc.userStream.distinct().listen(
       (user) {
         if (user != null) {
-          if (_lastUserId != user.id) {
-            _lastUserId = user.id;
+          if (_lastUser == null || !isSameUser(_lastUser!, user)) {
+            _lastUser = user;
             if (userId != null) {
               getData();
             }
           }
         } else {
-          _lastUserId = null;
+          _lastUser = null;
           stopListening();
         }
       },
     );
   }
+
+  bool isSameUser(UserType oldUser, UserType newUser) =>
+      oldUser.id == newUser.id;
 
   @override
   void onPause() {

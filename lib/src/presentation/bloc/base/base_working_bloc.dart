@@ -11,7 +11,9 @@ import 'working_state.dart';
 export 'working_state.dart';
 
 abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
-  String get anUnexpectedErrorOccurred => 'Error';
+  String get anUnexpectedErrorOccurred => 'An Unexpected Error Occurred';
+  String get defaultSuccessMessage => 'Success';
+  String get defaultLoadingMessage => 'Loading';
   static const DEFAULT_OPERATION = '_DEFAULT_OPERATION';
 
   final scrollController = ScrollController();
@@ -78,7 +80,7 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     emit(LoadedState<Output>(currentData));
   }
 
-  void emitError(String? message) {
+  void emitError(String message) {
     print("Emitting error");
     emit(ErrorState<Output>(message));
   }
@@ -104,7 +106,8 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
       String? successMessage,
       String? operationTag}) async {
     operationTag ??= DEFAULT_OPERATION;
-    startOperation(loadingMessage ?? 'Loading', operationTag: operationTag);
+    startOperation(loadingMessage ?? this.defaultLoadingMessage,
+        operationTag: operationTag);
     final future = await result;
     return handleResponse(future,
         successMessage: successMessage, operationTag: operationTag);
@@ -121,9 +124,8 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
       {String? successMessage, String? operationTag}) {
     operationTag ??= DEFAULT_OPERATION;
     return result.fold(
-        (l) =>
-            failedOperation(l.message ?? 'Error', operationTag: operationTag),
-        (r) => successfulOperation(successMessage ?? 'Success',
+        (l) => failedOperation(l, operationTag: operationTag),
+        (r) => successfulOperation(successMessage ?? this.defaultSuccessMessage,
             operationTag: operationTag, result: r));
   }
 
@@ -168,18 +170,36 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     return newState;
   }
 
-  FailedOperationState<Output> failedOperation(String message,
+  FailedOperationState<Output> failedOperation(Failure failure,
       {String? operationTag}) {
     operationTag ??= DEFAULT_OPERATION;
-    final newState = FailedOperationState(
-      data: currentData,
-      message: message,
-      operationTag: operationTag,
-    );
-    emit(newState);
+    return _failedOperation(
+        FailedOperationState.failure(
+          data: currentData,
+          failure: failure,
+          operationTag: operationTag,
+        ),
+        operationTag: operationTag);
+  }
+
+  FailedOperationState<Output> failedOperationMessage(String message,
+      {String? operationTag}) {
+    operationTag ??= DEFAULT_OPERATION;
+    return _failedOperation(
+        FailedOperationState(
+          data: currentData,
+          message: message,
+          operationTag: operationTag,
+        ),
+        operationTag: operationTag);
+  }
+
+  FailedOperationState<Output> _failedOperation(FailedOperationState<Output> op,
+      {String? operationTag}) {
+    emit(op);
     _operationStack.remove(operationTag);
     checkOperations();
-    return newState;
+    return op;
   }
 
   void scrollUp() {

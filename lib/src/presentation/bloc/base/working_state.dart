@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:firebase_bloc_base/firebase_bloc_base.dart';
 
 abstract class BlocState<T> extends Equatable {
   const BlocState();
@@ -17,7 +18,7 @@ abstract class Error {
 class LoadingState<T> extends BlocState<T> {}
 
 class ErrorState<T> extends BlocState<T> implements Error {
-  final String? message;
+  final String message;
 
   const ErrorState(this.message);
 
@@ -70,13 +71,21 @@ class FailedOperationState<T> extends LoadedState<T>
     with Operation
     implements Error {
   final String? operationTag;
-  final String? message;
+  final Failure? failure;
 
-  const FailedOperationState({required T data, this.operationTag, this.message})
+  String? get message => failure?.message;
+
+  FailedOperationState(
+      {required T data, this.operationTag, required String message})
+      : failure = Failure(message),
+        super(data);
+
+  const FailedOperationState.failure(
+      {required T data, this.operationTag, this.failure})
       : super(data);
 
   @override
-  List<Object?> get props => [...super.props, this.operationTag, this.message];
+  List<Object?> get props => [...super.props, this.operationTag, this.failure];
 }
 
 class SuccessfulOperationState<T, S> extends LoadedState<T> with Operation {

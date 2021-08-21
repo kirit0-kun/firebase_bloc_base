@@ -7,7 +7,8 @@ abstract class FirebaseRepository {
   const FirebaseRepository();
 
   FutureOr<Either<Failure, T>> tryWork<T>(FutureOr<T> work(),
-      [String? customErrorIfNoMessage, Failure createFailure(String message)?]) {
+      [String? customErrorIfNoMessage,
+      Failure createFailure(String message)?]) {
     try {
       final workSync = work();
       if (workSync is Future<T>) {
@@ -35,7 +36,8 @@ abstract class FirebaseRepository {
   }
 
   Left<Failure, T> handleError<T>(error,
-      {String? customErrorIfNoMessage, Failure createFailure(String message)?}) {
+      {String? customErrorIfNoMessage,
+      Failure createFailure(String message)?}) {
     String? message = getErrorMessage(error, customErrorIfNoMessage);
     createFailure ??= (message) => Failure(message);
     return Left(createFailure(message!));
@@ -53,13 +55,13 @@ abstract class FirebaseRepository {
     }
   }
 
-  String? getErrorMessage(error, [String? customErrorIfNoMessage]) {
+  String getErrorMessage(error, [String? customErrorIfNoMessage]) {
     String? message;
     try {
       message = error.message;
     } catch (e, s) {
       message ??= customErrorIfNoMessage ?? 'An unexpected error occurred';
     }
-    return message;
+    return message!;
   }
 }
