@@ -65,7 +65,7 @@ abstract class BaseConverterBloc<Input, Output>
             try {
               emitError(e.message);
             } catch (_) {
-              emitError('An unexpected error occurred');
+              emitError(anUnexpectedErrorOccurred);
             }
           },
         );
@@ -157,7 +157,7 @@ abstract class BaseConverterBloc<Input, Output>
           try {
             emitError((e as dynamic).message);
           } catch (_) {
-            emitError('An error occurred');
+            emitError(anUnexpectedErrorOccurred);
           }
         }
       }
@@ -165,7 +165,7 @@ abstract class BaseConverterBloc<Input, Output>
       BaseErrorState? errorState =
           events.firstWhereOrNull((element) => element is BaseErrorState)
               as BaseErrorState<dynamic>?;
-      emitError(errorState?.message ?? 'An expected error occurred');
+      emitError(errorState?.message ?? anUnexpectedErrorOccurred);
     }
   }
 

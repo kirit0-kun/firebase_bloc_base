@@ -12,7 +12,9 @@ abstract class BaseUserDependantProvider<Input, Output,
   final BaseUserBloc<UserType> userBloc;
 
   UserType? get currentUser => userBloc.currentUser;
+  UserType get requireUser => currentUser!;
   String? get userId => userBloc.currentUser?.id;
+  String get requireUserId => userId!;
 
   StreamSubscription<UserType?>? userSubscription;
 
