@@ -164,12 +164,14 @@ class PaginatedFirebaseQuerySwitcher<T> extends BaseFirebaseQuerySwitcher {
 
   Future<Page<T>> paginatedFutureTransform<S, T>(
       Query<S> initial, FutureOr<T> Function(S)? transform,
-      {bool? arrayContainsAny, bool? whereIn}) {
+      {bool? arrayContainsAny, bool? whereIn, GetOptions? getOptions}) {
     if (transform == null && S == T) {
       transform = (s) => s as T;
     }
     return paginateFuture(initial,
-            arrayContainsAny: arrayContainsAny, whereIn: whereIn)
+            arrayContainsAny: arrayContainsAny,
+            whereIn: whereIn,
+            getOptions: getOptions)
         .then((value) async {
       final chunksFuture = value.chunks.map((chunk) async {
         final futures =
@@ -183,10 +185,10 @@ class PaginatedFirebaseQuerySwitcher<T> extends BaseFirebaseQuerySwitcher {
   }
 
   Future<Page<T>> paginateFuture<T>(Query<T> initial,
-      {bool? arrayContainsAny, bool? whereIn}) {
+      {bool? arrayContainsAny, bool? whereIn, GetOptions? getOptions}) {
     final futures = paginate<T>(initial,
             whereIn: whereIn, arrayContainsAny: arrayContainsAny)!
-        .map((combo) => combo.query.get().then((value) =>
+        .map((combo) => combo.query.get(getOptions).then((value) =>
             PaginatedResult.fromParams(value.objects, combo.param,
                 value.docs.isEmpty ? null : value.docs.last)));
     return Future.wait(futures).then((value) {

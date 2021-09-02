@@ -45,11 +45,13 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
 
   BaseWorkingBloc.work({required Output currentData}) : super(LoadingState()) {
     this.currentData = currentData;
+    emitLoaded();
   }
 
   BaseWorkingBloc({Output? currentData}) : super(LoadingState()) {
     if (currentData != null || currentData?.runtimeType == Output) {
       this.currentData = currentData!;
+      emitLoaded();
     }
   }
 

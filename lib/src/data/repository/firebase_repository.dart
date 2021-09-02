@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:flutter/foundation.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
 
@@ -8,6 +8,7 @@ abstract class FirebaseRepository {
 
   String get anUnexpectedErrorOccurred => 'An unexpected error occurred';
 
+  @protected
   Future<Either<Failure, T>> tryWork<T>(Future<T> work(),
       [String? customErrorIfNoMessage,
       Failure createFailure(String message)?]) async {
@@ -31,6 +32,7 @@ abstract class FirebaseRepository {
     }
   }
 
+  @protected
   Either<Failure, T> tryWorkSync<T>(T work(),
       [String? customErrorIfNoMessage,
       Failure createFailure(String message)?]) {
@@ -46,6 +48,7 @@ abstract class FirebaseRepository {
     }
   }
 
+  @protected
   Left<Failure, T> handleError<T>(error,
       {String? customErrorIfNoMessage,
       Failure createFailure(String message)?}) {
@@ -54,6 +57,7 @@ abstract class FirebaseRepository {
     return Left(createFailure(message!));
   }
 
+  @protected
   FutureOr<ResponseEntity> tryWorkWithResponse(FutureOr work(),
       [String? customErrorIfNoMessage]) async {
     try {
@@ -66,6 +70,7 @@ abstract class FirebaseRepository {
     }
   }
 
+  @protected
   String getErrorMessage(error, [String? customErrorIfNoMessage]) {
     String? message;
     try {

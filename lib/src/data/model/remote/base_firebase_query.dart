@@ -65,12 +65,14 @@ class BaseFirebaseQuerySwitcher {
   }
 
   Future<List<T>> future<S, T>(
-      Query<S> initial, FutureOr<T> Function(S)? transform) async {
+      Query<S> initial, FutureOr<T> Function(S)? transform,
+      [GetOptions? getOptions]) async {
     if (transform == null && S == T) {
       transform = (s) async => s as T;
     }
-    final future =
-        await applyToQuery(initial).get().then((value) => value.objects);
+    final future = await applyToQuery(initial)
+        .get(getOptions)
+        .then((value) => value.objects);
     final futures = future.map((item) async => await transform!(item));
     return await Future.wait(futures);
   }

@@ -111,10 +111,10 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
   }
 
   Future<List<QueryDocumentSnapshot<T>>> moreThan10Future<T>(Query<T> initial,
-      {bool? arrayContainsAny, bool? whereIn}) {
+      {bool? arrayContainsAny, bool? whereIn, GetOptions? getOptions}) {
     final futures = moreThan10(initial,
             whereIn: whereIn, arrayContainsAny: arrayContainsAny)
-        .map((query) => query.get().then((value) => value.docs));
+        .map((query) => query.get(getOptions).then((value) => value.docs));
     return Future.wait(futures).then((value) {
       final entries = value
           .expand((element) => element)
@@ -161,12 +161,14 @@ class FirebaseQuerySwitcher extends BaseFirebaseQuerySwitcher {
 
   Future<List<T>> moreThan10FutureTransform<S, T>(
       Query<S> initial, FutureOr<T> Function(S)? transform,
-      {bool? arrayContainsAny, bool? whereIn}) {
+      {bool? arrayContainsAny, bool? whereIn, GetOptions? getOptions}) {
     if (transform == null && S == T) {
       transform = (s) => s as T;
     }
     return moreThan10Future<S>(initial,
-            arrayContainsAny: arrayContainsAny, whereIn: whereIn)
+            arrayContainsAny: arrayContainsAny,
+            whereIn: whereIn,
+            getOptions: getOptions)
         .then((value) async {
       final futures = value.map((data) async => await transform!(data.data()));
       return await Future.wait(futures);
