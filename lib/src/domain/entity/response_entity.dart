@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class ResponseEntity extends Equatable {
-  final String? message;
+  final String message;
 
   const ResponseEntity(this.message);
 

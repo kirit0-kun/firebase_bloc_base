@@ -53,6 +53,8 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
       currentUser = null;
       signedUp = false;
       _detailsSubscription?.cancel();
+    } else if (state is SignedInState<UserType>) {
+      currentUser = state.userAccount;
     }
     if (!_userAccount.hasValue || _userAccount.value != currentUser) {
       _userAccount.add(currentUser);
@@ -69,10 +71,10 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     final result = await _userRepository.autoSignIn();
     final completer = userCompleter(result);
     final futureResult = await completer.future;
-    futureResult.fold((l) => emit(SignedOutState()), (UserType? r) {});
+    futureResult.fold((l) => emit(SignedOutState()), (UserType r) {});
   }
 
-  Future<Either<Failure, UserType?>> signIn(
+  Future<Either<Failure, UserType>> signIn(
       String email, String password) async {
     signedUp = false;
     final result =
@@ -81,7 +83,7 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     return completer.future;
   }
 
-  Future<Either<Failure, UserType?>> signUp(String? firstName, String? lastName,
+  Future<Either<Failure, UserType>> signUp(String? firstName, String? lastName,
       String email, String password) async {
     signedUp = true;
     final result = await _userRepository.signUpWithEmailAndPassword(
@@ -129,9 +131,9 @@ class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
     }
   }
 
-  Completer<Either<Failure, T?>> userCompleter<T extends UserType>(
+  Completer<Either<Failure, T>> userCompleter<T extends UserType>(
       Either<Failure, Stream<T>> result) {
-    Completer<Either<Failure, T?>> completer = Completer();
+    Completer<Either<Failure, T>> completer = Completer();
     result.fold((l) {
       if (!completer.isCompleted) {
         completer.complete(Left(l));

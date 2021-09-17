@@ -7,7 +7,7 @@ import '../../../../firebase_bloc_base.dart';
 import 'base_converter_bloc.dart';
 
 abstract class BaseFormBundle<T> extends Equatable {
-  final int? pageNum;
+  final int pageNum;
 
   const BaseFormBundle(this.pageNum);
 
@@ -18,15 +18,15 @@ abstract class BaseFormBundle<T> extends Equatable {
 class DefaultFormBundle<T> extends BaseFormBundle<T> {
   final T? object;
 
-  const DefaultFormBundle(int? pageNum, this.object) : super(pageNum);
+  const DefaultFormBundle(int pageNum, this.object) : super(pageNum);
 
   @override
   List<Object?> get props => [...super.props, this.object];
 }
 
-abstract class BaseFormBloc<EntityType,
+abstract class BaseFormBloc<EntityType, InputType,
         FormBundleType extends BaseFormBundle<EntityType>>
-    extends BaseConverterBloc<EntityType, FormBundleType> {
+    extends BaseConverterBloc<InputType, FormBundleType> {
   static const _OPERATION = 'DEFAULT_OPERATION';
 
   final int startPageNum;
@@ -45,7 +45,7 @@ abstract class BaseFormBloc<EntityType,
   FormBundleType get currentData => bundle as FormBundleType;
 
   @override
-  Future<FormBundleType> convert(EntityType? input) async {
+  Future<FormBundleType> convert(InputType? input) async {
     return currentData;
   }
 
@@ -55,7 +55,6 @@ abstract class BaseFormBloc<EntityType,
     super.onChange(change);
   }
 
-  @mustCallSuper
   Future<void> checkState(BlocState<FormBundleType?> nextState) async {
     return;
   }
@@ -63,7 +62,7 @@ abstract class BaseFormBloc<EntityType,
   BaseFormBloc(
       {int? startPageNum,
       EntityType? initialObject,
-      BaseProviderBloc<dynamic, EntityType>? sourceBloc})
+      BaseProviderBloc<dynamic, InputType>? sourceBloc})
       : startPageNum = startPageNum ?? 0,
         super(sourceBloc: sourceBloc) {
     statePageNum = this.startPageNum;

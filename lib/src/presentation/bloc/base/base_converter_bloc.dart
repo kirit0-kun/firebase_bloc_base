@@ -44,6 +44,20 @@ abstract class BaseConverterBloc<Input, Output>
   StreamSink<Output> get dataSink => _dataSubject.sink;
   Stream<Output> get dataStream => _dataSubject.stream;
 
+  Stream<BaseProviderState<Output>> get providerStream => stream
+      .startWith(state)
+      .map((event) {
+        if (event is LoadingState<Output>) {
+          return BaseLoadingState<Output>();
+        } else if (event is LoadedState<Output>) {
+          return BaseLoadedState<Output>(event.data);
+        } else if (event is ErrorState<Output>) {
+          return BaseErrorState<Output>(event.message);
+        }
+      })
+      .whereType<BaseProviderState<Output>>()
+      .asBroadcastStream(onCancel: (sub) => sub.cancel());
+
   BaseConverterBloc(
       {this.sourceBloc, Output? currentData, bool getOnCreate = true})
       : super(currentData: currentData) {

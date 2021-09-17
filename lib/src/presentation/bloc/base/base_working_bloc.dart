@@ -87,15 +87,6 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     emit(ErrorState<Output>(message));
   }
 
-  void emitInsufficientLicense(
-      [String message = "You've reached your subscription limit"]) {
-    emit(InsufficientLicenseState<Output>(message));
-  }
-
-  void emitBranchRequired([String message = "Select a branch first"]) {
-    emit(BranchRequiredState<Output>(message));
-  }
-
   void checkOperations() {
     if (_operationStack.isNotEmpty && state is! Operation) {
       final item = _operationStack.entries.first;
@@ -123,12 +114,13 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
   }
 
   Operation handleResponse<T>(Either<Failure, T> result,
-      {String? successMessage, String? operationTag}) {
+      {String? successMessage, String? operationTag,bool emitIfFail = true,
+        bool emitIfSuccess = true}) {
     operationTag ??= DEFAULT_OPERATION;
     return result.fold(
-        (l) => failedOperation(l, operationTag: operationTag),
+        (l) => failedOperation(l, operationTag: operationTag,doEmit: emitIfFail),
         (r) => successfulOperation(successMessage ?? this.defaultSuccessMessage,
-            operationTag: operationTag, result: r));
+            operationTag: operationTag, result: r,doEmit: emitIfSuccess));
   }
 
   void startOperation(String message, {String? operationTag}) {
@@ -159,21 +151,23 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
   }
 
   SuccessfulOperationState<Output, dynamic> successfulOperation(String message,
-      {String? operationTag, dynamic result}) {
+      {String? operationTag, bool doEmit = true, dynamic result}) {
     operationTag ??= DEFAULT_OPERATION;
     final newState = SuccessfulOperationState(
         data: currentData,
         successMessage: message,
         operationTag: operationTag,
         result: result);
-    emit(newState);
+    if (doEmit) {
+      emit(newState);
+    }
     _operationStack.remove(operationTag);
     checkOperations();
     return newState;
   }
 
   FailedOperationState<Output> failedOperation(Failure failure,
-      {String? operationTag}) {
+      {String? operationTag,bool doEmit = true,}) {
     operationTag ??= DEFAULT_OPERATION;
     return _failedOperation(
         FailedOperationState.failure(
@@ -181,11 +175,12 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
           failure: failure,
           operationTag: operationTag,
         ),
+        doEmit: doEmit,
         operationTag: operationTag);
   }
 
   FailedOperationState<Output> failedOperationMessage(String message,
-      {String? operationTag}) {
+      {String? operationTag,bool doEmit = true,}) {
     operationTag ??= DEFAULT_OPERATION;
     return _failedOperation(
         FailedOperationState(
@@ -193,12 +188,15 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
           message: message,
           operationTag: operationTag,
         ),
+        doEmit: doEmit,
         operationTag: operationTag);
   }
 
   FailedOperationState<Output> _failedOperation(FailedOperationState<Output> op,
-      {String? operationTag}) {
-    emit(op);
+      {String? operationTag,bool doEmit = true,}) {
+    if (doEmit) {
+      emit(op);
+    }
     _operationStack.remove(operationTag);
     checkOperations();
     return op;

@@ -24,7 +24,7 @@ class BaseLoadedState<T> extends BaseProviderState<T> {
   const BaseLoadedState(this.data);
 
   @override
-  List<Object?> get props => [this.data];
+  get props => [this.data];
 }
 
 class BaseErrorState<T> extends BaseProviderState<T> {
@@ -33,5 +33,5 @@ class BaseErrorState<T> extends BaseProviderState<T> {
   const BaseErrorState(this.message);
 
   @override
-  List<Object?> get props => [this.message];
+  get props => [this.message];
 }

@@ -31,6 +31,8 @@ abstract class BaseProviderBloc<Input, Output>
   var _dataFuture = Completer<Output>();
   var _stateFuture = Completer<BaseProviderState<Output>>();
 
+  String get anUnexpectedErrorOccurred => 'An unexpected error occurred';
+
   Output? get currentData => dataSubject.valueOrNull;
 
   Stream<Output?> get dataStream => LazyStream(() => dataSubject
@@ -63,10 +65,6 @@ abstract class BaseProviderBloc<Input, Output>
 
   late bool listening;
 
-  bool get hasBranch => true;
-
-  Future<int?> maxItems<T>() async => null;
-
   BaseProviderBloc({bool getOnCreate = true, this.observer})
       : super(BaseLoadingState()) {
     if (getOnCreate) {
@@ -82,6 +80,7 @@ abstract class BaseProviderBloc<Input, Output>
   }
 
   void handleTransition(BaseProviderState<Output> state) {
+    print('Emitting ${state.runtimeType} from ${this.runtimeType}');
     if (state is BaseLoadedState<Output>) {
       Output data = state.data;
       handleData(data);
@@ -197,21 +196,19 @@ abstract class BaseProviderBloc<Input, Output>
           }
         });
     _listenerSub?.cancel();
-    _listenerSub = convertStream(dataStream).listen(
+    _listenerSub = convertStream(dataStream).doOnData((event) {
+      emitLoading();
+    }).listen(
       (event) {
         if (event != null) {
-          emit(event);
+          emitState(event);
         }
       },
       onError: (e, s) {
         print(e);
         print(s);
         print(this);
-        try {
-          emitError(e.message);
-        } catch (_) {
-          emitError('An unexpected error occurred');
-        }
+        emitError(getExceptionMessage(e));
       },
     );
   }
@@ -278,6 +275,16 @@ abstract class BaseProviderBloc<Input, Output>
     return BaseErrorState<Output>(message);
   }
 
+  void emitState(BaseProviderState<Output> state) {
+    if (state is BaseLoadingState<Output>) {
+      emitLoading();
+    } else if (state is BaseLoadedState<Output>) {
+      emitLoaded(state.data);
+    } else if (state is BaseErrorState<Output>) {
+      emitError(state.message);
+    }
+  }
+
   void emitLoading() {
     emit(createLoadingState<Output>());
   }
@@ -290,17 +297,19 @@ abstract class BaseProviderBloc<Input, Output>
     emit(createErrorState<Output>(message));
   }
 
-  Stream<BaseProviderState<Out?>> transformStream<Out>(
-      {Out? outData, Stream<Map<String, Out>>? outStream}) {
+  Stream<BaseProviderState<Out>> transformStream<Out>(
+      {Out? outData, Stream<Out>? outStream}) {
     if (outStream != null) {
       return CombineLatestStream.list([stateStream, outStream]).map((event) {
         return _switch<Out>(
             event.first as BaseProviderState<Output>, event.last as Out);
       }).asBroadcastStream(onCancel: (sub) => sub.cancel());
-    } else {
+    } else if (outData != null) {
       return stateStream.map((value) {
-        return _switch<Out?>(value, outData);
+        return _switch<Out>(value, outData);
       }).asBroadcastStream(onCancel: (sub) => sub.cancel());
+    } else {
+      return stateStream.map((event) => BaseLoadingState<Out>());
     }
   }
 
@@ -323,6 +332,14 @@ abstract class BaseProviderBloc<Input, Output>
   @override
   void onResume() {
     _listenerSub?.resume();
+  }
+
+  String getExceptionMessage(dynamic e) {
+    try {
+      return e.message;
+    } catch (_) {
+      return anUnexpectedErrorOccurred;
+    }
   }
 
   @override

@@ -52,9 +52,9 @@ abstract class FirebaseRepository {
   Left<Failure, T> handleError<T>(error,
       {String? customErrorIfNoMessage,
       Failure createFailure(String message)?}) {
-    String? message = getErrorMessage(error, customErrorIfNoMessage);
+    final message = getErrorMessage(error, customErrorIfNoMessage);
     createFailure ??= (message) => Failure(message);
-    return Left(createFailure(message!));
+    return Left(createFailure(message));
   }
 
   @protected

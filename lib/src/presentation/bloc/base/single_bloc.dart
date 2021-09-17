@@ -13,7 +13,7 @@ class BaseSingleBundle<T> extends Equatable {
   const BaseSingleBundle(this.edit, this.object);
 
   @override
-  List<Object?> get props => [this.edit, this.object];
+  get props => [this.edit, this.object];
 }
 
 class SingleBundle<T> extends BaseSingleBundle<T> {
@@ -72,8 +72,8 @@ abstract class BaseSingleBloc<EntityType,
     object = data.object;
   }
 
-  EntityType? filter(Map<String, EntityType> input) {
-    final object = input[this.id!];
+  EntityType? filter(Map<String, EntityType>? input) {
+    final object = input![this.id!];
     return object;
   }
 

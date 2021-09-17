@@ -26,27 +26,13 @@ class ErrorState<T> extends BlocState<T> implements Error {
   List<Object?> get props => [this.message];
 }
 
-class InsufficientLicenseState<T> extends ErrorState<T> {
-  const InsufficientLicenseState(String message) : super(message);
-
-  @override
-  List<Object?> get props => [...super.props];
-}
-
-class BranchRequiredState<T> extends ErrorState<T> {
-  const BranchRequiredState(String message) : super(message);
-
-  @override
-  List<Object?> get props => [...super.props];
-}
-
 class LoadedState<T> extends BlocState<T> {
   final T data;
 
   const LoadedState(this.data);
 
   @override
-  List<Object?> get props => [this.data];
+  get props => [this.data];
 }
 
 abstract class Operation {
@@ -63,8 +49,7 @@ class OnGoingOperationState<T> extends LoadedState<T>
       : super(data);
 
   @override
-  List<Object?> get props =>
-      [...super.props, this.operationTag, this.loadingMessage];
+  get props => [...super.props, this.operationTag, this.loadingMessage];
 }
 
 class FailedOperationState<T> extends LoadedState<T>

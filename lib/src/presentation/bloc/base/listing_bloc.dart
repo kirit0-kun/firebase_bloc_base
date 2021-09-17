@@ -14,7 +14,7 @@ abstract class ListingBundle<T> extends Equatable {
   ListingBundle<T> withSearch(bool enabled);
 
   @override
-  List<Object> get props => [this.search];
+  get props => [this.search];
 }
 
 class IndividualListingBundle<T> extends ListingBundle<T> {
@@ -26,7 +26,7 @@ class IndividualListingBundle<T> extends ListingBundle<T> {
   const IndividualListingBundle(this.items, bool search) : super(search);
 
   @override
-  List<Object> get props => [...super.props, this.items];
+  get props => [...super.props, this.items];
 }
 
 class GroupedListingBundle<T> extends ListingBundle<T> {
@@ -38,15 +38,12 @@ class GroupedListingBundle<T> extends ListingBundle<T> {
   const GroupedListingBundle(this.items, bool search) : super(search);
 
   @override
-  List<Object> get props => [...super.props, this.items];
+  get props => [...super.props, this.items];
 }
 
-abstract class BaseListingBloc<EntityType, Filter, Grouping, Sorting>
-    extends BaseConverterBloc<Map<String, EntityType>,
-        ListingBundle<EntityType>> {
+abstract class BaseListingBloc<EntityType, InputType, Filter, Grouping, Sorting>
+    extends BaseConverterBloc<InputType, ListingBundle<EntityType>> {
   bool isSearch = false;
-
-  Sorting? get initialSorting => null;
 
   Filter? get filter => _filterStream.valueOrNull;
   set filter(Filter? newFilter) {
@@ -69,29 +66,26 @@ abstract class BaseListingBloc<EntityType, Filter, Grouping, Sorting>
 
   final _groupingStream = BehaviorSubject<Grouping?>()..add(null);
 
-  Stream<BaseProviderState<Map<String, EntityType>>> get source =>
-      CombineLatestStream.combine4<
-              BaseProviderState<Map<String, EntityType>>,
-              Filter?,
-              Grouping?,
-              Sorting?,
-              BaseProviderState<Map<String, EntityType>>>(super.source!,
+  Stream<BaseProviderState<InputType>> get source =>
+      CombineLatestStream.combine4<BaseProviderState<InputType>, Filter?,
+              Grouping?, Sorting?, BaseProviderState<InputType>>(super.source!,
           _filterStream, _groupingStream, _sortingStream, (a, b, c, d) => a);
 
   BaseListingBloc({
-    BaseProviderBloc<dynamic, Map<String, EntityType>>? sourceBloc,
+    BaseProviderBloc<dynamic, InputType>? sourceBloc,
+    Sorting? initialSorting,
   }) : super(sourceBloc: sourceBloc) {
     sorting = initialSorting;
   }
 
   @override
-  Future<ListingBundle<EntityType>> convert(Map<String, EntityType>? input) {
-    final List<EntityType> values = sourceBloc!.latestData!.values.toList();
+  Future<ListingBundle<EntityType>> convert(InputType? input) {
+    final values = sourceBloc!.latestData!;
     return filtered(values, filter, grouping, sorting);
   }
 
   Future<ListingBundle<EntityType>> filtered(
-    List<EntityType> input,
+    InputType input,
     Filter? filter,
     Grouping? grouping,
     Sorting? sorting,
