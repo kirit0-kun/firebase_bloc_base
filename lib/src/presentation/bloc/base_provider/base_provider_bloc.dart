@@ -63,7 +63,7 @@ abstract class BaseProviderBloc<Input, Output>
 
   Timer? _retryTimer;
 
-  late bool listening;
+  bool listening = false;
 
   BaseProviderBloc({bool getOnCreate = true, this.observer})
       : super(BaseLoadingState()) {
@@ -125,12 +125,12 @@ abstract class BaseProviderBloc<Input, Output>
       FutureOr<Either<Failure, Stream<Input>>> getOperation) async {
     emitLoading();
     final operation = await getOperation;
-    operation.fold(
-      (l) {
+    await operation.fold(
+      (l) async {
         emitError(l.message);
       },
-      (r) {
-        _handleStream(r);
+      (r) async {
+        await _handleStream(r);
       },
     );
   }
@@ -151,6 +151,7 @@ abstract class BaseProviderBloc<Input, Output>
 
   Future<void> _handleStream(Stream<Input?> sourceStream) async {
     final dataStream = sourceStream
+        .doOnError((e, s) {})
         .doOnData((event) {
           emitLoading();
           _cancelable?.cancel();
@@ -166,7 +167,7 @@ abstract class BaseProviderBloc<Input, Output>
           }
         })
         .where(shouldProcessEvents)
-        .throttleTime(debounceMilliseconds, trailing: true)
+        .debounceTime(debounceMilliseconds)
         .asyncMap((event) async {
           BaseErrorState? errorState = event.value2
                   .firstWhereOrNull((element) => element is BaseErrorState)
@@ -231,11 +232,7 @@ abstract class BaseProviderBloc<Input, Output>
     } else {
       final completer = Completer<Output>();
       completer.complete(result);
-      return Cancelable(completer, () {
-        // if (!completer.isCompleted) {
-        //   completer.completeError(CanceledError());
-        // }
-      });
+      return Cancelable(completer);
     }
   }
 
@@ -245,17 +242,25 @@ abstract class BaseProviderBloc<Input, Output>
   }
 
   @mustCallSuper
-  void getData() {
+  Future<void> getData() async {
     listening = true;
-    final result = this.result;
-    final dataSource = this.dataSource;
-    final additionalSources = this.additionalSources;
-    if (dataSource != null) {
-      _handleOperation(dataSource);
-    } else if (additionalSources.isNotEmpty) {
-      _handleStream(Stream.value(null));
-    } else if (result != null) {
-      _handleDataRequest(result);
+    try {
+      final result = this.result;
+      final dataSource = this.dataSource;
+      final additionalSources = this.additionalSources;
+      if (dataSource != null) {
+        await _handleOperation(dataSource);
+      } else if (additionalSources.isNotEmpty) {
+        await _handleStream(Stream.value(null));
+      } else if (result != null) {
+        await _handleDataRequest(result);
+      }
+    } catch (e,s) {
+      listening = false;
+      print(this.runtimeType);
+      print(e);
+      print(s);
+      emitError(getExceptionMessage(e));
     }
   }
 

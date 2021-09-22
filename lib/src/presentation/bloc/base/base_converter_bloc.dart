@@ -69,7 +69,7 @@ abstract class BaseConverterBloc<Input, Output>
         })
         //.asBroadcastStream(onCancel: (sub) => sub.cancel())
         .where(shouldProcessEvents)
-        .throttleTime(debounceMilliseconds, trailing: true)
+        .debounceTime(debounceMilliseconds)
         .listen(
           _handler,
           onError: (e, s) {
@@ -135,11 +135,7 @@ abstract class BaseConverterBloc<Input, Output>
     } else {
       final completer = Completer<Output>();
       completer.complete(result);
-      return Cancelable(completer, () {
-        // if (!completer.isCompleted) {
-        //   completer.completeError(CanceledError());
-        // }
-      });
+      return Cancelable(completer);
     }
   }
 
