@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../firebase_bloc_base.dart';
 import 'base_converter_bloc.dart';
@@ -77,24 +78,24 @@ abstract class BaseFormBloc<EntityType, InputType,
     }
   }
 
-  void next() {
+  void next(BuildContext context) {
     if (!isLastPage) {
       statePageNum += 1;
       emitLoaded();
     } else {
-      save();
+      save(context);
     }
   }
 
-  Future<void> save() async {
+  Future<void> save(BuildContext context) async {
     fixStatus();
-    await saveObject();
+    await saveObject(context);
   }
 
   void fixStatus() {}
 
   @protected
-  Future<void> saveObject();
+  Future<void> saveObject(BuildContext context);
 
   Future<bool> goBack() async {
     return state is! Operation;

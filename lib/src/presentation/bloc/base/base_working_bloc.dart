@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'base_bloc.dart';
 import 'working_state.dart';
 
 export 'working_state.dart';
 
-abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
+abstract class BaseWorkingBloc<Output> extends BaseCubit<BlocState<Output>> {
   String get anUnexpectedErrorOccurred => 'An Unexpected Error Occurred';
   String get defaultSuccessMessage => 'Success';
   String get defaultLoadingMessage => 'Loading';
@@ -114,13 +114,16 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
   }
 
   Operation handleResponse<T>(Either<Failure, T> result,
-      {String? successMessage, String? operationTag,bool emitIfFail = true,
-        bool emitIfSuccess = true}) {
+      {String? successMessage,
+      String? operationTag,
+      bool emitIfFail = true,
+      bool emitIfSuccess = true}) {
     operationTag ??= DEFAULT_OPERATION;
     return result.fold(
-        (l) => failedOperation(l, operationTag: operationTag,doEmit: emitIfFail),
+        (l) =>
+            failedOperation(l, operationTag: operationTag, doEmit: emitIfFail),
         (r) => successfulOperation(successMessage ?? this.defaultSuccessMessage,
-            operationTag: operationTag, result: r,doEmit: emitIfSuccess));
+            operationTag: operationTag, result: r, doEmit: emitIfSuccess));
   }
 
   void startOperation(String message, {String? operationTag}) {
@@ -166,8 +169,11 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     return newState;
   }
 
-  FailedOperationState<Output> failedOperation(Failure failure,
-      {String? operationTag,bool doEmit = true,}) {
+  FailedOperationState<Output> failedOperation(
+    Failure failure, {
+    String? operationTag,
+    bool doEmit = true,
+  }) {
     operationTag ??= DEFAULT_OPERATION;
     return _failedOperation(
         FailedOperationState.failure(
@@ -179,8 +185,11 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
         operationTag: operationTag);
   }
 
-  FailedOperationState<Output> failedOperationMessage(String message,
-      {String? operationTag,bool doEmit = true,}) {
+  FailedOperationState<Output> failedOperationMessage(
+    String message, {
+    String? operationTag,
+    bool doEmit = true,
+  }) {
     operationTag ??= DEFAULT_OPERATION;
     return _failedOperation(
         FailedOperationState(
@@ -192,8 +201,11 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
         operationTag: operationTag);
   }
 
-  FailedOperationState<Output> _failedOperation(FailedOperationState<Output> op,
-      {String? operationTag,bool doEmit = true,}) {
+  FailedOperationState<Output> _failedOperation(
+    FailedOperationState<Output> op, {
+    String? operationTag,
+    bool doEmit = true,
+  }) {
     if (doEmit) {
       emit(op);
     }

@@ -4,13 +4,14 @@ import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_bloc_base/src/data/repository/user_repository.dart';
 import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../../../../firebase_bloc_base.dart';
 import 'user_state.dart';
 
-class BaseUserBloc<UserType extends FirebaseProfile> extends Cubit<UserState> {
+class BaseUserBloc<UserType extends FirebaseProfile>
+    extends BaseCubit<UserState> {
   final emailVerificationDaysLimit = Duration(days: 7);
   final userNotFoundError = "User not found";
   final sendEmailError = 'Failed to send the email.';

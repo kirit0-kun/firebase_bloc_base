@@ -5,11 +5,11 @@ import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lazy_evaluation/lazy_evaluation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:worker_manager/worker_manager.dart';
 
+import '../base/base_bloc.dart';
 import 'lifecycle_observer.dart';
 import 'provider_state.dart';
 
@@ -22,7 +22,7 @@ extension BehaviorSubjectExtension<T> on BehaviorSubject<T> {
 }
 
 abstract class BaseProviderBloc<Input, Output>
-    extends Cubit<BaseProviderState<Output>> with LifecycleAware {
+    extends BaseCubit<BaseProviderState<Output>> with LifecycleAware {
   final LifecycleObserver? observer;
 
   final debounceMilliseconds = Duration(milliseconds: 100);
@@ -255,7 +255,7 @@ abstract class BaseProviderBloc<Input, Output>
       } else if (result != null) {
         await _handleDataRequest(result);
       }
-    } catch (e,s) {
+    } catch (e, s) {
       listening = false;
       print(this.runtimeType);
       print(e);
