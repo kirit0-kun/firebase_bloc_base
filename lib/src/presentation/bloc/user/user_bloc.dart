@@ -45,8 +45,8 @@ class BaseUserBloc<UserType extends FirebaseProfile>
 
   @override
   void onChange(change) {
-    handleTransition(change.nextState);
     super.onChange(change);
+    handleTransition(change.nextState);
   }
 
   void handleTransition(UserState state) {

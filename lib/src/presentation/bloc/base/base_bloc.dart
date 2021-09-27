@@ -7,5 +7,5 @@ abstract class BaseCubit<State> extends Cubit<State> {
   Stream<State> get exclusiveStream => super.stream;
 
   @override
-  get stream => super.stream.startWith(state);
+  get stream => super.stream.startWith(state).map((e) => state);
 }

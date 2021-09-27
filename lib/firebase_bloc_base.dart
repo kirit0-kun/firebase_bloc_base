@@ -31,6 +31,7 @@ export 'src/presentation/bloc/base/paginated_mixin.dart';
 export 'src/presentation/bloc/base/paginated_state.dart';
 export 'src/presentation/bloc/base/single_bloc.dart';
 export 'src/presentation/bloc/base/working_state.dart';
+export 'src/presentation/bloc/base_provider/base_navigator_bloc.dart';
 export 'src/presentation/bloc/base_provider/base_provider_bloc.dart';
 export 'src/presentation/bloc/base_provider/base_provider_dependant_provider.dart';
 export 'src/presentation/bloc/base_provider/base_user_dependant_provider.dart';

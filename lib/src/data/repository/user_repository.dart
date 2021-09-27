@@ -55,14 +55,16 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
       String email, String password) async {
     return tryWork(() async {
       final user = await auth.signIn(email, password);
-      return signIn<UserType>(user.user, user.additionalUserInfo!.isNewUser);
+      final stream = signIn<UserType>(user.user, user.additionalUserInfo!.isNewUser);
+      return stream;
     });
   }
 
   Future<Either<Failure, Stream<UserType>>> autoSignIn() async {
     return tryWork(() async {
       final user = await auth.getUser();
-      return signIn<UserType>(user, false);
+      final stream = signIn<UserType>(user, false);
+      return stream;
     });
   }
 
