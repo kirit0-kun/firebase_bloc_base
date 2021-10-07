@@ -13,7 +13,7 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState> {
   get stream => super.stream.distinct();
 
   List<Stream> get eventsStreams;
-  Map<NavigationState, void Function(BuildContext)> get actions;
+  Map<Type, void Function(BuildContext, NavigationState)> get actions;
 
   BaseNavigatorBloc(NavigationState initialState) : super(initialState) {
     final combinedStream =
@@ -38,16 +38,17 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState> {
 
   void _handleState(NavigationState event) {
     print("NavigationState ${event.runtimeType}");
-    final operation = actions[event];
+    final type = event.runtimeType;
+    final operation = actions[type];
     if (operation != null) {
-      operation(navKey.currentContext!);
+      operation(navKey.currentContext!, event);
     }
   }
 
-  Future pushDestructively(BuildContext context, String routeName) async {
+  Future<T?> pushDestructively<T>(BuildContext context, String routeName) async {
     final result = await Navigator.pushNamedAndRemoveUntil(
         context, routeName, (r) => false);
-    return result;
+    return result as T?;
   }
 
   NavigationState? generateNavigationState(List events);
@@ -59,7 +60,8 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState> {
   }
 }
 
-abstract class NavigationState extends Equatable {
+abstract class NavigationState extends Equatable implements Type {
+  const NavigationState();
   @override
   get stringify => true;
   @override

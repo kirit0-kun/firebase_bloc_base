@@ -173,7 +173,7 @@ abstract class BaseProviderBloc<Input, Output>
                   .firstWhereOrNull((element) => element is BaseErrorState)
               as BaseErrorState<dynamic>?;
           if (errorState != null) {
-            return createErrorState<Output>(errorState.message!);
+            return createErrorState<Output>(errorState.message);
           } else if (event.value2
               .any((element) => element is BaseLoadingState)) {
             return createLoadingState<Output>();
@@ -276,7 +276,7 @@ abstract class BaseProviderBloc<Input, Output>
     return BaseLoadedState<Output>(data);
   }
 
-  BaseProviderState<Output> createErrorState<Output>(String? message) {
+  BaseProviderState<Output> createErrorState<Output>(String message) {
     return BaseErrorState<Output>(message);
   }
 
@@ -298,7 +298,7 @@ abstract class BaseProviderBloc<Input, Output>
     emit(createLoadedState<Output>(data));
   }
 
-  void emitError(String? message) {
+  void emitError(String message) {
     emit(createErrorState<Output>(message));
   }
 

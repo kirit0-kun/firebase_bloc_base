@@ -28,7 +28,7 @@ class BaseLoadedState<T> extends BaseProviderState<T> {
 }
 
 class BaseErrorState<T> extends BaseProviderState<T> {
-  final String? message;
+  final String message;
 
   const BaseErrorState(this.message);
 

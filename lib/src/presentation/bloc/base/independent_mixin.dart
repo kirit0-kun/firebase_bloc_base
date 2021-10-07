@@ -26,15 +26,15 @@ mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output> {
               String? error;
               try {
                 error = e.message;
-              } catch (_) {
-                error = this.anUnexpectedErrorOccurred;
-              }
+              } catch (_) {}
+              error ??= this.anUnexpectedErrorOccurred;
               return BaseErrorState<Input>(error);
             }).cast<BaseProviderState<Input>>(),
           )
           .startWith(BaseLoadingState<Input>());
     }
-    final Future<Either<Failure, Input>>? dataSourceFuture = this.dataSourceFuture;
+    final Future<Either<Failure, Input>>? dataSourceFuture =
+        this.dataSourceFuture;
     if (dataSourceFuture != null) {
       return dataSourceFuture.asStream().map((event) {
         return event.fold(

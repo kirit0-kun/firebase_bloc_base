@@ -16,7 +16,7 @@ enum SignInMethod {
 abstract class BaseAuth {
   Stream<User?> get userChanges;
 
-  Future<User?> getUser();
+  User? getUser();
   Future<UserCredential> signIn(String email, String password);
   Future<UserCredential> anonymousSignIn();
   Future<UserCredential> signUp(String email, String password);
@@ -68,7 +68,7 @@ class SimpleAuth implements BaseAuth {
   }
 
   @override
-  Future<User?> getUser() async {
+  User? getUser() {
     User? user = _firebaseAuth.currentUser;
     return user;
   }

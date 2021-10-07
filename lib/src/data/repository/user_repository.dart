@@ -4,6 +4,7 @@ import 'package:firebase_bloc_base/firebase_bloc_base.dart';
 import 'package:firebase_bloc_base/src/data/service/auth.dart';
 import 'package:firebase_bloc_base/src/data/source/remote/user_data_source.dart';
 import 'package:firebase_bloc_base/src/domain/entity/response_entity.dart';
+import 'package:rxdart/rxdart.dart';
 
 import 'firebase_repository.dart';
 
@@ -19,7 +20,9 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
   String get requestError => "Couldn't complete your request";
 
   Stream<User?> get userChanges {
-    return auth.userChanges;
+    return auth.userChanges
+        .shareValueSeeded(auth.getUser())
+        .map((_) => auth.getUser());
   }
 
   Stream<T> signIn<T extends UserType>(User? user, bool isNewUser) {
@@ -51,20 +54,35 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
     }
   }
 
-  Future<Either<Failure, Stream<UserType>>> signInWithEmailAndPassword(
-      String email, String password) async {
-    return tryWork(() async {
-      final user = await auth.signIn(email, password);
-      final stream = signIn<UserType>(user.user, user.additionalUserInfo!.isNewUser);
+  Either<Failure, Stream<UserType>> signInUser(User user) {
+    return tryWorkSync(() {
+      final stream = signIn<UserType>(user, false);
       return stream;
     });
   }
 
-  Future<Either<Failure, Stream<UserType>>> autoSignIn() async {
+  Future<Either<Failure, Stream<UserType>>> signInWithEmailAndPassword(
+      String email, String password) async {
     return tryWork(() async {
-      final user = await auth.getUser();
+      final user = await auth.signIn(email, password);
+      final stream =
+          signIn<UserType>(user.user, user.additionalUserInfo!.isNewUser);
+      return stream;
+    });
+  }
+
+  Either<Failure, Stream<UserType>> autoSignIn() {
+    return tryWorkSync(() {
+      final user = auth.getUser();
       final stream = signIn<UserType>(user, false);
       return stream;
+    });
+  }
+
+  Future<Either<Failure, Stream<UserType>>> anonymousSignIn() async {
+    return tryWork(() async {
+      final user = await auth.anonymousSignIn();
+      return signIn<UserType>(user.user, user.additionalUserInfo!.isNewUser);
     });
   }
 
@@ -94,7 +112,7 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
       if (phoneNumber != null && phoneNumber != userAccount.phoneNumber) {
         await auth.setPhoneNumber(phoneNumber, getCode);
       }
-      final user = await auth.getUser();
+      final user = auth.getUser();
       if (user != null) {
         userAccount = userAccount.copyWith(userDetails: user) as UserType;
         final newUserType = await userDataSource.updateUserAccount(userAccount);

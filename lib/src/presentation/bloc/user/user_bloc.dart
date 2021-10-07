@@ -12,33 +12,36 @@ import 'user_state.dart';
 
 class BaseUserBloc<UserType extends FirebaseProfile>
     extends BaseCubit<UserState> {
-  final emailVerificationDaysLimit = Duration(days: 7);
-  final userNotFoundError = "User not found";
-  final sendEmailError = 'Failed to send the email.';
+  final Duration emailVerificationDaysLimit = Duration(days: 7);
+  final String userNotFoundError = "User not found";
+  final String sendEmailError = 'Failed to send the email.';
+  final bool isAnonymousUserEnabled = false;
 
   final BaseUserRepository<UserType> _userRepository;
 
-  final _user = BehaviorSubject<User?>();
+  final BehaviorSubject<User?> _user = BehaviorSubject<User?>();
   final BehaviorSubject<UserType?> _userAccount = BehaviorSubject<UserType?>();
+
+  Stream<User?> get userChanges => _user.shareValue();
 
   StreamSubscription<UserType?>? _detailsSubscription;
   StreamSubscription<User?>? _userSubscription;
-  Stream<User?> get userChanges => _user.shareValue();
-  Stream<UserType?> get userStream => _userAccount.shareValue();
-
-  bool signedUp = false;
-
-  UserType? currentUser;
+  Stream<UserType?> get userStream => _userAccount.distinct().shareValue();
+  UserType? get currentUser => _userAccount.valueOrNull;
 
   BaseUserBloc(this._userRepository) : super(UserLoadingState()) {
-    autoSignIn().catchError((e, s) {
-      print(e);
-      print(s);
-    });
-    _userSubscription = _userRepository.userChanges.listen((User? event) {
+    _userSubscription = _userRepository.userChanges.listen((event) {
       _user.add(event);
-      if (event == null && state is SignedInState) {
-        emit(SignedOutState());
+      if (event == null) {
+        if (isAnonymousUserEnabled) {
+          emitLoading();
+          anonymousSignIn();
+        } else {
+          emitSignedOut();
+        }
+      } else if (state is! SignedInState) {
+        emitLoading();
+        signInUser(event);
       }
     });
   }
@@ -51,14 +54,10 @@ class BaseUserBloc<UserType extends FirebaseProfile>
 
   void handleTransition(UserState state) {
     if (state is SignedOutState) {
-      currentUser = null;
-      signedUp = false;
+      _userAccount.add(null);
       _detailsSubscription?.cancel();
     } else if (state is SignedInState<UserType>) {
-      currentUser = state.userAccount;
-    }
-    if (!_userAccount.hasValue || _userAccount.value != currentUser) {
-      _userAccount.add(currentUser);
+      _userAccount.add(state.userAccount);
     }
   }
 
@@ -67,26 +66,36 @@ class BaseUserBloc<UserType extends FirebaseProfile>
     return account;
   }
 
-  Future<void> autoSignIn() async {
-    signedUp = false;
-    final result = await _userRepository.autoSignIn();
+  Future<Either<Failure, UserType>> signInUser(User user) async {
+    final result = _userRepository.signInUser(user);
+    final completer = userCompleter(result);
+    return completer.future;
+  }
+
+  Future<Either<Failure, UserType>> autoSignIn() async {
+    final result = _userRepository.autoSignIn();
     final completer = userCompleter(result);
     final futureResult = await completer.future;
     futureResult.fold((l) => emit(SignedOutState()), (UserType r) {});
+    return futureResult;
   }
 
   Future<Either<Failure, UserType>> signIn(
       String email, String password) async {
-    signedUp = false;
     final result =
         await _userRepository.signInWithEmailAndPassword(email, password);
     final completer = userCompleter(result);
     return completer.future;
   }
 
+  Future<Either<Failure, UserType>> anonymousSignIn() async {
+    final result = await _userRepository.anonymousSignIn();
+    final completer = userCompleter(result);
+    return completer.future;
+  }
+
   Future<Either<Failure, UserType>> signUp(String? firstName, String? lastName,
       String email, String password) async {
-    signedUp = true;
     final result = await _userRepository.signUpWithEmailAndPassword(
         firstName, lastName, email, password);
     final completer = userCompleter(result);
@@ -116,8 +125,7 @@ class BaseUserBloc<UserType extends FirebaseProfile>
   Future<ResponseEntity> signOut() async {
     final result = await _userRepository.signOut();
     if (result is Success) {
-      currentUser = null;
-      emit(SignedOutState());
+      emitSignedOut();
     }
     return result;
   }
@@ -144,7 +152,7 @@ class BaseUserBloc<UserType extends FirebaseProfile>
       _detailsSubscription = null;
       final newStream =
           r.withLatestFrom<User?, T>(userChanges, (userAccount, user) {
-        if (userAccount != null && user != null) {
+        if (user != null) {
           return syncUserDetails(userAccount, user) as T;
         }
         throw Exception();
@@ -162,7 +170,7 @@ class BaseUserBloc<UserType extends FirebaseProfile>
         }
         final result = await signOut();
         if (result is! Success) {
-          emit(SignedOutState());
+          emitSignedOut();
         }
       });
     });
@@ -170,33 +178,39 @@ class BaseUserBloc<UserType extends FirebaseProfile>
   }
 
   Future<void> _handleUser(UserType? event) async {
-    currentUser = event;
-    if (currentUser == null) {
-      emit(SignedOutState());
+    if (event == null) {
+      emitSignedOut();
     } else {
-      emitSignedUser(currentUser!);
+      emitSignedUser(event);
     }
   }
 
-  void emitSignedUser(UserType currentUser) {
-    final verificationLimit = currentUser.userDetails!.metadata.creationTime!
+  void emitSignedUser(UserType userAccount) {
+    final verificationLimit = userAccount.userDetails!.metadata.creationTime!
         .add(emailVerificationDaysLimit);
     final now = DateTime.now();
-    if (currentUser.email != 'testing@test.com' &&
-        !currentUser.emailVerified &&
+    if (userAccount.email != 'testing@test.com' &&
+        !userAccount.emailVerified &&
         verificationLimit.isBefore(now)) {
-      emit(SignedInWithNoVerifiedEmailState(currentUser));
+      emit(SignedInWithNoVerifiedEmailState(userAccount));
     } else {
-      if (currentUser.firstTime!) {
-        emit(SignedUpState(currentUser));
+      if (userAccount.firstTime!) {
+        emit(SignedUpState(userAccount));
       } else {
-        emit(SignedInState(currentUser));
+        emit(SignedInState(userAccount));
       }
     }
   }
 
+  void emitLoading() {
+    emit(UserLoadingState());
+  }
+
+  void emitSignedOut() {
+    emit(SignedOutState());
+  }
+
   void completeSignUp() {
-    signedUp = false;
     _handleUser(currentUser);
   }
 
@@ -204,8 +218,8 @@ class BaseUserBloc<UserType extends FirebaseProfile>
   Future<void> close() {
     _detailsSubscription?.cancel();
     _userSubscription?.cancel();
-    _user.close();
     _userAccount.close();
+    _user.close();
     return super.close();
   }
 }

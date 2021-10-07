@@ -55,18 +55,18 @@ class OnGoingOperationState<T> extends LoadedState<T>
 class FailedOperationState<T> extends LoadedState<T>
     with Operation
     implements Error {
-  final String? operationTag;
-  final Failure? failure;
+  final String operationTag;
+  final Failure failure;
 
-  String? get message => failure?.message;
+  String get message => failure.message;
 
   FailedOperationState(
-      {required T data, this.operationTag, required String message})
+      {required T data, required this.operationTag, required String message})
       : failure = Failure(message),
         super(data);
 
   const FailedOperationState.failure(
-      {required T data, this.operationTag, this.failure})
+      {required T data, required this.operationTag, required this.failure})
       : super(data);
 
   @override

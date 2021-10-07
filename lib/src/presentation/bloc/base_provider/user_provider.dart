@@ -7,6 +7,8 @@ import 'package:rxdart/rxdart.dart';
 
 class UserProvider<UserType extends FirebaseProfile>
     extends BaseProviderBloc<dynamic, UserType> {
+  String get notSignedInError => 'Not Signed In Error';
+
   final BaseUserBloc<UserType> userBloc;
 
   UserProvider(this.userBloc, LifecycleObserver observer)
@@ -18,7 +20,7 @@ class UserProvider<UserType extends FirebaseProfile>
           if (userState is UserLoadingState) {
             return BaseLoadingState<UserType>();
           } else if (userState is SignedOutState) {
-            return BaseErrorState<UserType>(null);
+            return BaseErrorState<UserType>(notSignedInError);
           } else if (userState is SignedInState<UserType>) {
             return BaseLoadedState<UserType>(userState.userAccount);
           }
