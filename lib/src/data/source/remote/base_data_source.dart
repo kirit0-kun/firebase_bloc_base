@@ -12,12 +12,12 @@ class FirebaseDataSource {
   }
 
   Future<T?> getSingle<T>(Query<T?> query, [bool fromBack = false]) async {
-    final docs = await query.get(defaultGetOptions);
+    final docs = await (fromBack ? query.limitToLast(1): query.limit(1)).get(defaultGetOptions);
     final objects = getObjects(docs);
     if (objects.isEmpty) {
       return null;
     }
-    return fromBack ? objects.last : objects.first;
+    return objects.first;
   }
 
   Future<T?> getSingleDoc<T>(DocumentReference<T?> query,

@@ -20,6 +20,7 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState> {
         CombineLatestStream(eventsStreams, generateNavigationState);
     final initialized = ensureInitialized()
         .asStream()
+        .doOnData(onKeyInitialized)
         .asBroadcastStream(onCancel: (c) => c.cancel());
     _sub = initialized
         .switchMap((value) => combinedStream)
@@ -28,12 +29,17 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState> {
     initialized.switchMap((value) => this.stream).listen(_handleState);
   }
 
-  Future<void> ensureInitialized() async {
+  Future<void> onKeyInitialized(GlobalKey<NavigatorState> navKey) async {}
+
+  Future<GlobalKey<NavigatorState>> ensureInitialized() async {
+    if (navKey.currentContext != null) {
+      return navKey;
+    }
     await Future.doWhile(() async {
       await Future.delayed(Duration(microseconds: 1000), () {});
       return navKey.currentContext == null;
     });
-    return;
+    return navKey;
   }
 
   void _handleState(NavigationState event) {
@@ -45,9 +51,15 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState> {
     }
   }
 
-  Future<T?> pushDestructively<T>(BuildContext context, String routeName) async {
-    final result = await Navigator.pushNamedAndRemoveUntil(
-        context, routeName, (r) => false);
+  Future<T?> pushDestructively<T>(String routeName) async {
+    final key = await ensureInitialized();
+    final result = await key.currentState!.pushNamedAndRemoveUntil(routeName, (r) => false);
+    return result as T?;
+  }
+
+  Future<T?> push<T>(String routeName) async {
+    final key = await ensureInitialized();
+    final result = await key.currentState!.pushNamed(routeName);
     return result as T?;
   }
 
