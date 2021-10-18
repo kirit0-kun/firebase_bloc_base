@@ -56,6 +56,23 @@ class PaginatedWhereParam extends PaginatedParam {
           count: count ?? this.count);
 }
 
+class PaginatedSingleParam extends PaginatedParam {
+  final dynamic value;
+
+  const PaginatedSingleParam(this.value,
+      {DocumentSnapshot? startAfter, int? count})
+      : super(startAfter: startAfter, count: count);
+
+  @override
+  get props => [this.value, this.startAfter, this.count];
+
+  PaginatedSingleParam copyWith(
+          {dynamic values, DocumentSnapshot? startAfter, int? count}) =>
+      PaginatedSingleParam(value ?? this.value,
+          startAfter: startAfter ?? this.startAfter,
+          count: count ?? this.count);
+}
+
 class PaginatedResult<T> extends PaginatedParam {
   final List<T> result;
   final PaginatedParam? param;

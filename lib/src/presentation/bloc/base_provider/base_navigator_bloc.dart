@@ -3,9 +3,29 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_bloc_base/firebase_bloc_base.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
-abstract class BaseNavigatorBloc extends BaseCubit<NavigationState> {
+abstract class Sailor extends BaseCubit<NavigationState> {
+  static late final Sailor _instance;
+
+  Sailor(NavigationState initialState) : super(initialState) {
+    _instance = this;
+  }
+
+  static Sailor get instance {
+    return _instance;
+  }
+
+  Future<T?> pushDestructively<T>(String routeName);
+  Future<T?> push<T>(String routeName);
+}
+
+abstract class BaseNavigatorBloc extends Sailor {
+  static BaseNavigatorBloc of(BuildContext context) {
+    return BlocProvider.of<BaseNavigatorBloc>(context);
+  }
+
   final GlobalKey<NavigatorState> navKey = GlobalKey();
 
   late final StreamSubscription _sub;
@@ -53,7 +73,8 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState> {
 
   Future<T?> pushDestructively<T>(String routeName) async {
     final key = await ensureInitialized();
-    final result = await key.currentState!.pushNamedAndRemoveUntil(routeName, (r) => false);
+    final result = await key.currentState!
+        .pushNamedAndRemoveUntil(routeName, (r) => false);
     return result as T?;
   }
 
