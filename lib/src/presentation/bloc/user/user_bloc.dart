@@ -88,6 +88,11 @@ class BaseUserBloc<UserType extends FirebaseProfile>
     return completer.future;
   }
 
+  Future<Either<Failure, UserType>> getUser(String userId) async {
+    final result = await _userRepository.getUser(userId);
+    return result;
+  }
+
   Future<Either<Failure, UserType>> anonymousSignIn() async {
     final result = await _userRepository.anonymousSignIn();
     final completer = userCompleter(result);

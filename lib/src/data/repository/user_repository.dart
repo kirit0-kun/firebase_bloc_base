@@ -101,6 +101,16 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
     });
   }
 
+  Future<Either<Failure, UserType>> getUser(String userId) async {
+    return tryWork(() async {
+      final user = auth.getUser();
+      if (user?.uid == userId) {
+        return userDataSource.getUser(user!).then((value) => value!);
+      }
+      throw Exception();
+    });
+  }
+
   Future<Either<Failure, UserType>> updateUserAccount(UserType userAccount,
       [String? phoneNumber,
       String? email,
@@ -122,7 +132,7 @@ abstract class BaseUserRepository<UserType extends FirebaseProfile>
       }
     });
   }
-
+  
   Future<Either<Failure, void>> resetPassword(
     String email,
   ) async {

@@ -31,8 +31,6 @@ abstract class BaseProviderBloc<Input, Output>
   var _dataFuture = Completer<Output>();
   var _stateFuture = Completer<BaseProviderState<Output>>();
 
-  String get anUnexpectedErrorOccurred => 'An unexpected error occurred';
-
   Output? get currentData => dataSubject.valueOrNull;
 
   Stream<Output?> get dataStream => LazyStream(() => dataSubject
@@ -337,14 +335,6 @@ abstract class BaseProviderBloc<Input, Output>
   @override
   void onResume() {
     _listenerSub?.resume();
-  }
-
-  String getExceptionMessage(dynamic e) {
-    try {
-      return e.message;
-    } catch (_) {
-      return anUnexpectedErrorOccurred;
-    }
   }
 
   @override
